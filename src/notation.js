@@ -84,6 +84,10 @@ export async function renderScore(container, question, options = {}) {
   const height = 240;
   const renderer = new Renderer(container, Renderer.Backends.SVG);
   renderer.resize(width, height);
+  // VexFlow also fixes its host element to the logical pixel width. Release
+  // that size so the SVG can shrink inside a phone card and center on desktop.
+  container.style.width = '100%';
+  container.style.removeProperty('height');
   const context = renderer.getContext();
   context.setFillStyle(INK).setStrokeStyle(INK);
 
@@ -171,6 +175,7 @@ export async function renderScore(container, question, options = {}) {
   svg.removeAttribute('height');
   svg.style.display = 'block';
   svg.style.width = '100%';
+  svg.style.maxWidth = '900px';
   svg.style.height = 'auto';
   svg.style.overflow = 'visible';
   svg.setAttribute('role', 'img');
