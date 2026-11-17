@@ -1,7 +1,7 @@
 import { FAMILIES, INSTRUMENTS, getInstrument, noteName } from './instruments.js';
 import { RULES, getRule, generateQuestion, getEligibleInstruments, validateQuestion } from './engine.js';
 import { loadState, defaultState, saveState, selectAnswer, resolveAnswer, setQuestion, newSession, aggregateStats } from './session.js';
-import { renderScore } from './notation.js';
+import { renderScore } from './notation.js?v=1.0.1';
 import { TEXT } from './i18n.js';
 
 const $ = id => document.getElementById(id);
