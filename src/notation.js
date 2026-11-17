@@ -78,16 +78,18 @@ export async function renderScore(container, question, options = {}) {
   const vf = vexflow();
   const { Renderer, Stave, StaveNote, Voice, Formatter, Accidental, Articulation, Annotation, StaveTie, ModifierPosition } = vf;
   container.replaceChildren();
-  const width = 820;
-  const height = 300;
+  // A compact logical canvas enlarges the engraving when the SVG fills the
+  // quiz card, keeping notation legible at classroom projection distances.
+  const width = 650;
+  const height = 240;
   const renderer = new Renderer(container, Renderer.Backends.SVG);
   renderer.resize(width, height);
   const context = renderer.getContext();
   context.setFillStyle(INK).setStrokeStyle(INK);
 
   const clef = q.clef || 'treble';
-  const staveWidth = q.notes.length === 1 ? 370 : q.notes.length === 2 ? 540 : width - 70;
-  const stave = new Stave((width - staveWidth) / 2, 105, staveWidth)
+  const staveWidth = q.notes.length === 1 ? 300 : q.notes.length === 2 ? 430 : width - 70;
+  const stave = new Stave((width - staveWidth) / 2, 70, staveWidth)
     .addClef(clef)
     .setContext(context);
   stave.setBegBarType(vf.Barline.type.SINGLE);

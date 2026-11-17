@@ -109,14 +109,14 @@ function updateStats() {
   $('points-stat').textContent=stats.points;
   $('accuracy-stat').textContent=stats.answered?`${stats.accuracy}%`:'—';
   $('streak-stat').replaceChildren(document.createTextNode(`${stats.streak} `),element('small','',t('inARow')));
-  const inRound=stats.answered===0?0:((stats.answered-1)%10)+1;
+  const inRound=stats.answered>0&&stats.answered%10===0&&state.active.current?.phase==='resolved'?10:stats.answered%10;
   $('round-stat').replaceChildren(document.createTextNode(`${inRound} `),element('small','','/ 10'));
   $('round-bar').style.width=`${inRound*10}%`;
 }
 function makeQuestion() {
   const rounds=state.active.rounds;
   const question=generateQuestion({...state.config,recentSignatures:rounds.map(r=>r.question.signature),recentAnswers:rounds.slice(-12).map(r=>r.question.answer)});
-  state=setQuestion(state,question);showCorrected=false;persist();
+  state=setQuestion(state,question);showCorrected=false;persist();updateStats();
 }
 async function drawQuestion() {
   const current=state.active.current;if(!current)return;
