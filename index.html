@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#173f43">
+  <meta name="description" content="Train your orchestration eye: spot range and notation errors in generated musical examples.">
+  <title>InstrumentError · Instrumentation training</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#question-heading" data-i18n="skip">Zur Aufgabe</a>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="InstrumentError home"><span class="brand-mark" aria-hidden="true">i<span>!</span></span><span>Instrument<span class="brand-error">Error</span><small data-i18n="brandSub">DAS INSTRUMENTATIONSQUIZ</small></span></a>
+    <nav class="top-actions" aria-label="App">
+      <button class="text-button" id="progress-button"><span class="chart-icon" aria-hidden="true">▥</span> <span data-i18n="progress">Fortschritt</span></button>
+      <button class="icon-button" id="fullscreen-button" aria-label="Vollbild" title="Vollbild">⛶</button>
+      <button class="language-button" id="language-button" aria-label="Switch to English">EN</button>
+    </nav>
+  </header>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <details id="training-settings" open>
+        <summary><span data-i18n="yourTraining">Dein Training</span><span class="settings-symbol" aria-hidden="true">☷</span></summary>
+        <div class="settings-content">
+          <p class="section-label" data-i18n="instrumentFamilies">INSTRUMENTE</p>
+          <div id="family-filters" class="family-filters"></div>
+          <details class="instrument-details"><summary><span data-i18n="chooseInstruments">Einzeln auswählen</span><span id="selected-count" class="count-badge"></span></summary><div id="instrument-filters" class="instrument-filters"></div></details>
+          <div class="rule-section"><p class="section-label" data-i18n="errorTypes">FEHLERARTEN</p><div id="rule-filters" class="rule-filters"></div></div>
+          <p class="filter-note" id="filter-note" aria-live="polite"></p>
+          <button class="apply-button" id="apply-filters" data-i18n="applyFilters" hidden>Auswahl anwenden</button>
+          <p class="selection-status" id="selection-status" aria-live="polite"></p>
+          <div class="sidebar-tip"><span class="tip-mark" aria-hidden="true">i</span><p data-i18n="scopeShort">Gewöhnliche Spielweise und Standardnotation. Pro Aufgabe höchstens ein Fehler.</p><button class="inline-link" id="help-button" data-i18n="howItWorks">So funktioniert’s ↗</button></div>
+        </div>
+      </details>
+      <div class="sidebar-bottom"><span class="local-dot" aria-hidden="true"></span><span data-i18n="localSave">Fortschritt bleibt in diesem Browser</span></div>
+    </aside>
+    <main id="main">
+      <div class="main-heading"><div><p class="eyebrow" data-i18n="eyebrow">HINSCHAUEN. ENTSCHEIDEN. DAZULERNEN.</p><h1 data-i18n="heading">Gut gesetzt?</h1><p class="intro" data-i18n="intro">Schärfe deinen Blick für Tonumfang und Notation.</p></div><button id="new-session" class="text-button new-session"><span aria-hidden="true">↻</span> <span data-i18n="newSession">Neue Sitzung</span></button></div>
+      <section class="stats-strip" aria-label="Session statistics"><div><span class="stat-label" data-i18n="points">PUNKTE</span><strong id="points-stat">0</strong></div><div><span class="stat-label" data-i18n="accuracy">TREFFERQUOTE</span><strong id="accuracy-stat">—</strong></div><div><span class="stat-label" data-i18n="streak">SERIE</span><strong id="streak-stat">0 <small>in Folge</small></strong></div><div class="round-stat"><span class="stat-label" data-i18n="roundProgress">DEINE RUNDE</span><strong id="round-stat">0 <small>/ 10</small></strong><div class="round-track"><span id="round-bar"></span></div></div></section>
+      <article class="question-card" id="question-card">
+        <div class="question-topline"><span id="question-number" class="section-label">AUFGABE 01</span><span class="notation-badge" data-i18n="writtenPitch">NOTIERTE TONHÖHEN</span></div>
+        <div class="instrument-heading"><div><p id="instrument-family" class="instrument-family"></p><h2 id="question-heading" tabindex="-1">…</h2></div><span class="clef-badge" id="clef-label"></span></div>
+        <div id="score" class="score" aria-busy="true"><p class="loading-message" data-i18n="loading">Noten werden gesetzt …</p></div>
+        <div class="score-bottom"><span class="score-scope" data-i18n="scoreScope">Gewöhnliche Spielweise · keine erweiterten Techniken</span><span class="score-decoration" aria-hidden="true">♪</span></div>
+      </article>
+      <section class="answer-section" aria-labelledby="answer-prompt"><div class="answer-intro"><h3 id="answer-prompt" data-i18n="answerPrompt">Ist diese Stimme korrekt notiert?</h3><p id="answer-instruction" data-i18n="answerInstruction">Entscheide dich, dann sieh dir die Lösung an.</p></div><div class="answer-buttons"><button id="answer-correct" class="answer-button correct-button" aria-pressed="false"><span class="answer-icon" aria-hidden="true">✓</span><span data-i18n="correct">Korrekt</span><kbd>K</kbd></button><button id="answer-incorrect" class="answer-button incorrect-button" aria-pressed="false"><span class="answer-icon" aria-hidden="true">!</span><span data-i18n="incorrect">Fehlerhaft</span><kbd>F</kbd></button></div><div id="resolve-row" class="resolve-row" hidden><p data-i18n="chosenHint">Antwort gewählt. Bereit für die Auflösung?</p><button id="resolve-button" class="primary-button"><span data-i18n="resolve">Auflösen</span><kbd>↵</kbd></button></div></section>
+      <section id="feedback" class="feedback" hidden aria-labelledby="feedback-title"><div class="feedback-heading"><span id="feedback-icon" class="feedback-icon" aria-hidden="true"></span><div><p id="feedback-result" class="section-label"></p><h3 id="feedback-title" tabindex="-1"></h3></div><span class="point-pill" id="point-pill"></span></div><p id="explanation"></p><div id="correction-note" class="correction-note"></div><details id="reference-details" class="reference-details"><summary data-i18n="instrumentReference">Tonumfang & Instrumentenhinweis</summary><p id="range-reference"></p><div id="source-links"></div></details><div class="feedback-actions"><button id="correction-toggle" class="text-button" data-i18n="showCorrection">Korrigierte Notation zeigen</button><button id="next-button" class="primary-button"><span data-i18n="next">Nächste Aufgabe</span><span aria-hidden="true">→</span></button></div><p id="milestone" class="milestone" hidden></p></section>
+      <p id="storage-notice" class="storage-notice" role="status" hidden></p>
+      <footer class="main-footer"><span data-i18n="footerPractice">Üben ohne Zeitdruck. Jeder Blick zählt.</span><a href="https://github.com/AdrianArtacho/InstrumentError" target="_blank" rel="noopener">GitHub ↗</a><span>Adrián Artacho</span></footer>
+    </main>
+  </div>
+  <dialog id="progress-dialog" class="app-dialog"><div class="dialog-heading"><div><p class="eyebrow" data-i18n="practiceHistory">DEIN TRAINING IM BLICK</p><h2 data-i18n="progress">Fortschritt</h2></div><button class="dialog-close icon-button" aria-label="Schließen">×</button></div><div id="lifetime-stats" class="lifetime-stats"></div><h3 data-i18n="recentRounds">Letzte Aufgaben</h3><div id="round-history" class="round-history"></div><p class="privacy-note" data-i18n="privacy">Nur auf diesem Gerät, in diesem Browser. Kein Konto, keine Übertragung deiner Antworten. Browserdaten zu löschen entfernt auch deinen Fortschritt.</p><button id="export-button" class="secondary-button" data-i18n="export">Fortschritt als JSON exportieren</button></dialog>
+  <dialog id="help-dialog" class="app-dialog"><div class="dialog-heading"><div><p class="eyebrow">INSTRUMENTERROR</p><h2 data-i18n="howItWorksTitle">So funktioniert’s</h2></div><button class="dialog-close icon-button" aria-label="Schließen">×</button></div><ol class="help-steps"><li data-i18n="help1">Wähle Instrumente und Fehlerarten für dein Training.</li><li data-i18n="help2">Prüfe die Noten: Korrekt (K) oder fehlerhaft (F)?</li><li data-i18n="help3">Klicke auf Auflösen (Enter). Die Erklärung und eine mögliche Korrektur helfen dir weiter.</li><li data-i18n="help4">Für jede richtige Antwort erhältst du 10 Punkte. Nach zehn Aufgaben beginnt die nächste Runde – deine Sitzung läuft weiter.</li></ol><h3 data-i18n="scopeTitle">Die Spielregeln</h3><p data-i18n="scopeLong">Die Aufgaben beziehen sich auf gewöhnliche Spielweisen und konventionelle Notation. Erweiterte Techniken (etwa Multiphonics) sind ausgeschlossen. Eine Aufgabe enthält entweder keinen Fehler oder genau eine der ausgewählten Fehlerarten. Registergrenzen sind nach Instrument und Modell festgelegt; sie sind keine universellen technischen Maxima.</p><p data-i18n="tieScope">Akzente werden hier als neue Anschläge behandelt. Ein Akzent auf einer gebundenen Fortsetzung gilt deshalb in diesem Übungsmodus als Notationskonflikt.</p><h3 data-i18n="keysTitle">Tastatur & Beamer</h3><p data-i18n="keysText">K = korrekt · F = fehlerhaft · Enter = auflösen / weiter. Die Vollbildtaste oben vergrößert die Arbeitsfläche.</p><a class="inline-link" href="./docs/rules.md" target="_blank" rel="noopener" data-i18n="sourcesRules">Quellen & Regeln ↗</a></dialog>
+  <dialog id="new-session-dialog" class="app-dialog small-dialog"><div class="dialog-heading"><h2 data-i18n="newSessionQuestion">Neue Sitzung beginnen?</h2><button class="dialog-close icon-button" aria-label="Schließen">×</button></div><p data-i18n="newSessionHint">Die aktuelle Sitzung bleibt im Gesamtfortschritt erhalten. Punkte und Serie dieser Sitzung starten bei null.</p><div class="dialog-actions"><button class="secondary-button dialog-close" data-i18n="cancel">Abbrechen</button><button id="confirm-new-session" class="primary-button" data-i18n="startSession">Neue Sitzung starten</button></div></dialog>
+  <noscript><p class="noscript">Please enable JavaScript to use InstrumentError.</p></noscript>
+  <script src="./vendor/vexflow.js"></script>
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
