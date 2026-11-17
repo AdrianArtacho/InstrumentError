@@ -1,7 +1,7 @@
 import { FAMILIES, INSTRUMENTS, getInstrument, noteName } from './instruments.js';
 import { RULES, getRule, generateQuestion, getEligibleInstruments, validateQuestion } from './engine.js';
 import { loadState, defaultState, saveState, selectAnswer, resolveAnswer, setQuestion, newSession, aggregateStats } from './session.js';
-import { renderScore } from './notation.js?v=1.0.3';
+import { renderScore } from './notation.js?v=1.0.4';
 import { TEXT } from './i18n.js';
 
 const $ = id => document.getElementById(id);
@@ -238,7 +238,11 @@ $('fullscreen-button').addEventListener('click',async()=>{
   try{if(document.fullscreenElement)await document.exitFullscreen();else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();else throw new Error('Fullscreen unavailable');}
   catch{notice='noFullscreen';updateStorageNotice();}
 });
-document.addEventListener('fullscreenchange',()=>translatePage());
+document.addEventListener('fullscreenchange',()=>{
+  const key=document.fullscreenElement?'exitFullscreen':'fullscreen';
+  $('fullscreen-button').setAttribute('aria-label',t(key));
+  $('fullscreen-button').title=t(key);
+});
 document.querySelectorAll('.dialog-close').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
 document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('click',event=>{if(event.target===dialog){const rect=dialog.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)dialog.close();}}));
 document.addEventListener('keydown',event=>{

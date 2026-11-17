@@ -37,6 +37,7 @@ The test command uses Node's built-in runner and has no package dependencies. Te
 
 - [Instrument models, sources and extension guide](docs/rules.md)
 - [Notation renderer and dependency provenance](docs/notation.md)
+- [Verification and desktop/phone previews](artifacts/verification.md)
 - `src/instruments.js`: named instrument models and written pitch ranges.
 - `src/engine.js`: rule registry, generators, independent detectors and explanations.
 - `src/notation.js`: responsive SVG engraving with locally vendored VexFlow.

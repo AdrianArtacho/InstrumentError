@@ -129,7 +129,9 @@ export async function renderScore(container, question, options = {}) {
       const instruction = new Annotation(q.technique)
         .setFont('Academico', 14)
         .setVerticalJustification(Annotation.VerticalJustify.TOP)
-        .setJustification(Annotation.HorizontalJustify.LEFT);
+        .setJustification(Annotation.HorizontalJustify.LEFT)
+        // Leave clear air between the text baseline and an above-note tie.
+        .setYShift(-12);
       if (reveal && !corrected && question.ruleId === 'technique-conflict') {
         instruction.setStyle({ fillStyle: ERROR, strokeStyle: ERROR });
       }
