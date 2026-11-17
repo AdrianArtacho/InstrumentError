@@ -182,13 +182,12 @@ export async function renderScore(container, question, options = {}) {
   svg.setAttribute('aria-label', notationDescription(question, language, corrected));
   svg.setAttribute('focusable', 'false');
 
-  // Fit extreme ledger lines after engraving, preserving a generous paper margin.
-  // The invisible fallback protects browsers that cannot report an SVG text bbox.
-  try {
-    const box = svg.getBBox();
-    const top = Math.min(0, box.y - 24);
-    const bottom = Math.max(height, box.y + box.height + 24);
-    svg.setAttribute('viewBox', `0 ${top} ${width} ${bottom - top}`);
-  } catch { /* the fixed canvas still fits the configured quiz ranges */ }
+  // Music fonts have large text bounding boxes outside their visible ink.
+  // Fit extreme pitches from their engraved staff coordinates instead, keeping
+  // ordinary snippets compact while reserving space for stems, marks and text.
+  const noteYs = notes.flatMap(note => note.getYs()).filter(Number.isFinite);
+  const top = Math.min(0, ...noteYs.map(y => y - 75));
+  const bottom = Math.max(height, stave.getBottomLineY() + 80, ...noteYs.map(y => y + 80));
+  svg.setAttribute('viewBox', `0 ${top} ${width} ${bottom - top}`);
   return svg;
 }
