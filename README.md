@@ -47,3 +47,5 @@ The test command uses Node's built-in runner and has no package dependencies. Te
 Add new errors as explicit rule generators **and** independent detectors, with a clean correction and tests. This keeps the engine extendable without turning ambiguous or merely difficult writing into a false error.
 
 Concept and development: **Adrián Artacho**. Instrument references: VSL Academy and the linked primary documentation in the rules guide. Music engraving: [VexFlow](https://github.com/vexflow/vexflow), with licenses and font credits in [vendor/](vendor/).
+
+## [ToDo](https://trello.com/c/qWvA7xPH/128-instrumenterror)
