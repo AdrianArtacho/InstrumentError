@@ -1,11 +1,16 @@
 import { FAMILIES, INSTRUMENTS, getInstrument, noteName } from './instruments.js';
-import { RULES, getRule, generateQuestion, getEligibleInstruments, validateQuestion } from './engine.js?v=1.1.0';
+import { RULES, getRule, generateQuestion, getEligibleInstruments, validateQuestion } from './engine.js?v=1.1.1';
 import { loadState, defaultState, saveState, selectAnswer, resolveAnswer, setQuestion, newSession, aggregateStats } from './session.js';
-import { renderScore } from './notation.js?v=1.1.0';
-import { TEXT } from './i18n.js?v=1.1.0';
+import { renderScore } from './notation.js?v=1.1.1';
+import { TEXT } from './i18n.js?v=1.1.1';
 
 const $ = id => document.getElementById(id);
-const loaded = loadState();
+// An isolated QA link exercises the same persistence without changing a student's session.
+const previewStorage = new URLSearchParams(location.search).get('preview') === '1' ? {
+  getItem: key => localStorage.getItem(`instrument-error.preview.${key}`),
+  setItem: (key,value) => localStorage.setItem(`instrument-error.preview.${key}`,value),
+} : undefined;
+const loaded = loadState(previewStorage);
 let state = loaded.state;
 const allInstruments = INSTRUMENTS.map(i => i.id);
 const allRules = RULES.map(r => r.id);
@@ -36,7 +41,7 @@ const familyIcons = {
 };
 
 function persist() {
-  saveFailed = !saveState(state);
+  saveFailed = !saveState(state,previewStorage);
   updateStorageNotice();
 }
 function updateStorageNotice() {

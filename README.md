@@ -35,6 +35,8 @@ Browser storage is device/browser specific; clearing site data removes saved pro
 npm test
 ```
 
+For browser checks, append `?preview=1` to the app URL. This uses a separate practice-storage namespace, preserving the normal student session.
+
 The test command uses Node's built-in runner and has no package dependencies. Tests check supported instrument/rule combinations, independent error detection, clean corrections, balanced non-repeating generation, matched near-boundary examples for all 23 models, transpositions, storage recovery, reloads, scoring exactly once and lifetime counters.
 
 - [Instrument models, sources and extension guide](docs/rules.md)
