@@ -1,21 +1,27 @@
+import { readExerciseLink, makeExerciseLink } from './exercise-link.js?v=1.2.0';
 import { FAMILIES, INSTRUMENTS, getInstrument, noteName } from './instruments.js';
 import { RULES, getRule, generateQuestion, getEligibleInstruments, validateQuestion } from './engine.js?v=1.1.1';
 import { loadState, defaultState, saveState, selectAnswer, resolveAnswer, setQuestion, newSession, aggregateStats } from './session.js';
 import { renderScore } from './notation.js?v=1.1.1';
-import { TEXT } from './i18n.js?v=1.1.1';
+import { TEXT } from './i18n.js?v=1.2.0';
 
 const $ = id => document.getElementById(id);
-// An isolated QA link exercises the same persistence without changing a student's session.
-const previewStorage = new URLSearchParams(location.search).get('preview') === '1' ? {
-  getItem: key => localStorage.getItem(`instrument-error.preview.${key}`),
-  setItem: (key,value) => localStorage.setItem(`instrument-error.preview.${key}`,value),
+const params = new URLSearchParams(location.search);
+const exercise = readExerciseLink(params);
+const namespace = JSON.stringify([params.get('preview') === '1', exercise.config ?? null]);
+const storage = params.get('preview') === '1' || exercise.config ? {
+  getItem: key => localStorage.getItem((exercise.config ? `instrument-error.link.${namespace}.${key}` : `instrument-error.preview.${key}`)),
+  setItem: (key,value) => localStorage.setItem((exercise.config ? `instrument-error.link.${namespace}.${key}` : `instrument-error.preview.${key}`),value),
 } : undefined;
-const loaded = loadState(previewStorage);
+const loaded = loadState(storage);
 let state = loaded.state;
 const allInstruments = INSTRUMENTS.map(i => i.id);
 const allRules = RULES.map(r => r.id);
-const defaultConfig = { language: 'de', instrumentIds: allInstruments, ruleIds: allRules };
+const defaultConfig = { language: 'de', instrumentIds: allInstruments, ruleIds: allRules, ...exercise.config };
 if (loaded.status !== 'loaded') state = defaultState(defaultConfig);
+if (exercise.config && ['instrumentIds','ruleIds'].some(key => JSON.stringify(state.config[key]) !== JSON.stringify(exercise.config[key]))) {
+  state = { ...state, config: { ...state.config, ...exercise.config }, active: { ...state.active, current: null }, lastResult: null };
+}
 state.config.instrumentIds = state.config.instrumentIds.filter(id => getInstrument(id));
 state.config.ruleIds = state.config.ruleIds.filter(id => getRule(id));
 if (!getEligibleInstruments(state.config).length) state.config = { ...defaultConfig, language: state.config.language };
@@ -26,7 +32,7 @@ let draft = { instrumentIds: [...state.config.instrumentIds], ruleIds: [...state
 let showCorrected = false;
 let busy = true;
 let saveFailed = loaded.status === 'unavailable';
-let notice = loaded.status === 'corrupt' ? 'storageCorrupt' : null;
+let notice = exercise.invalid ? 'invalidExercise' : loaded.status === 'corrupt' ? 'storageCorrupt' : null;
 let renderVersion = 0;
 const lang = () => state.config.language;
 const t = key => TEXT[lang()][key] ?? key;
@@ -41,7 +47,7 @@ const familyIcons = {
 };
 
 function persist() {
-  saveFailed = !saveState(state,previewStorage);
+  saveFailed = !saveState(state,storage);
   updateStorageNotice();
 }
 function updateStorageNotice() {
@@ -107,6 +113,8 @@ function renderFilters() {
   const changed=JSON.stringify([...draft.instrumentIds].sort())!==JSON.stringify([...state.config.instrumentIds].sort())||JSON.stringify([...draft.ruleIds].sort())!==JSON.stringify([...state.config.ruleIds].sort());
   $('apply-filters').hidden=!changed;
   $('apply-filters').disabled=!eligible.length;
+  $('share-url').disabled=!eligible.length;
+  $('share-url').value=eligible.length ? makeExerciseLink(location.href,draft,$('share-fullscreen').checked) : '';
   $('selection-status').textContent=changed&&eligible.length?t('pendingFilters'):'';
   if(restoreFamily)families.querySelector(`[data-family="${CSS.escape(restoreFamily)}"]`)?.focus({preventScroll:true});
   else if(restoreInput)document.querySelector(`.settings-content input[value="${CSS.escape(restoreInput)}"]`)?.focus({preventScroll:true});
@@ -251,11 +259,17 @@ $('export-button').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify({app:'InstrumentError',exportedAt:new Date().toISOString(),...state},null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);const link=element('a');link.href=url;link.download=`${t('exportName')}-${new Date().toISOString().slice(0,10)}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
+$('share-fullscreen').checked=exercise.fullscreen;
+$('share-fullscreen').addEventListener('change',renderFilters);
+$('share-url').addEventListener('focus',()=> $('share-url').select());
+$('fullscreen-start').hidden=!exercise.fullscreen;
+$('fullscreen-start').addEventListener('click',()=> $('fullscreen-button').click());
 $('fullscreen-button').addEventListener('click',async()=>{
   try{if(document.fullscreenElement)await document.exitFullscreen();else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();else throw new Error('Fullscreen unavailable');}
   catch{notice='noFullscreen';updateStorageNotice();}
 });
 document.addEventListener('fullscreenchange',()=>{
+  if(document.fullscreenElement)$('fullscreen-start').hidden=true;
   const key=document.fullscreenElement?'exitFullscreen':'fullscreen';
   $('fullscreen-button').setAttribute('aria-label',t(key));
   $('fullscreen-button').title=t(key);

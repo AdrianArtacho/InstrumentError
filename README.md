@@ -29,6 +29,18 @@ Keyboard: **K** = correct, **F** = incorrect, **Enter** = resolve / next. Answer
 
 Browser storage is device/browser specific; clearing site data removes saved progress. Private browsing or storage restrictions may prevent saving; the quiz displays a notice and remains usable for the current visit. Recent detail is bounded to 250 questions in the active session and 20 archived session summaries, while lifetime counters are retained. Export is a local backup/report, not an account sync or import feature.
 
+## Share a practice selection
+
+Open Settings, choose instruments and error types, and copy the exercise link shown there. The link reflects the current selection in the dialog, even before you apply it.
+
+- `instruments`: comma-separated instrument IDs or family IDs (`strings`, `woodwinds`, `brass`, `percussion`). Mix families and individual IDs as needed.
+- `errors`: comma-separated rule IDs: `written-range`, `wind-chord`, `tied-accent`, `technique-conflict`.
+- `fullscreen=1`: offers a Start fullscreen button. Browsers require a click to enter native fullscreen.
+
+Omitting either filter includes all items in that category. The app uses only instruments that support at least one selected error type. Invalid selections fall back to regular settings. Filtered links save progress separately from ordinary practice.
+
+[Example: violin and viola range practice with fullscreen offered](https://adrianartacho.github.io/InstrumentError/?instruments=violin,viola&errors=written-range&fullscreen=1)
+
 ## Development
 
 ```sh

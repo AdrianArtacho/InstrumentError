@@ -7,7 +7,7 @@
   <meta name="description" content="Train your orchestration eye: spot range and notation errors in generated musical examples.">
   <title>InstrumentError · Instrumentation training</title>
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=1.1.1">
+  <link rel="stylesheet" href="./styles.css?v=1.2.0">
 </head>
 <body class="training-app">
   <a class="skip-link" href="#question-heading" data-i18n="skip">Zur Aufgabe</a>
@@ -26,6 +26,7 @@
       <div class="instrument-heading">
         <div class="instrument-title"><p id="instrument-family" class="instrument-family"></p><h1 id="question-heading" tabindex="-1">…</h1><span class="clef-badge" id="clef-label"></span></div>
         <nav class="training-tools" aria-label="Training">
+        <button id="fullscreen-start" class="secondary-button" data-i18n="startFullscreen" hidden>Vollbild starten</button>
           <button class="icon-button" id="settings-button" aria-label="Einstellungen" title="Einstellungen">⚙</button>
           <button class="icon-button" id="progress-button" aria-label="Fortschritt" title="Fortschritt">▥</button>
           <button class="icon-button" id="fullscreen-button" aria-label="Vollbild" title="Vollbild">⛶</button>
@@ -65,6 +66,8 @@
           <p class="selection-status" id="selection-status" aria-live="polite"></p>
           <div class="sidebar-tip"><span class="tip-mark" aria-hidden="true">i</span><p data-i18n="scopeShort">Gewöhnliche Spielweise und Standardnotation. Pro Aufgabe höchstens ein Fehler.</p><button class="inline-link" id="help-button" data-i18n="howItWorks">So funktioniert’s ↗</button></div>
         </div>
+    <p><label for="share-url" data-i18n="shareLink">Übungslink zum Kopieren</label><br><input id="share-url" type="url" readonly style="width:100%"></p>
+    <p><label><input id="share-fullscreen" type="checkbox"> <span data-i18n="shareFullscreen">Vollbild anbieten</span></label></p>
     <div class="settings-footer"><button id="new-session" class="secondary-button" data-i18n="newSession">Neue Sitzung</button><button class="primary-button dialog-close" data-i18n="backToTraining">Zum Training</button></div>
     <p class="privacy-note" data-i18n="localSave">Fortschritt bleibt in diesem Browser</p>
     <a href="https://github.com/AdrianArtacho/InstrumentError" target="_blank" rel="noopener">GitHub ↗</a><span class="credits">Adrián Artacho</span>
@@ -80,6 +83,6 @@
 <dialog id="new-session-dialog" class="app-dialog small-dialog"><div class="dialog-heading"><h2 data-i18n="newSessionQuestion">Neue Sitzung beginnen?</h2><button class="dialog-close icon-button" aria-label="Schließen">×</button></div><p data-i18n="newSessionHint">Die aktuelle Sitzung bleibt im Gesamtfortschritt erhalten. Punkte und Serie dieser Sitzung starten bei null.</p><div class="dialog-actions"><button class="secondary-button dialog-close" data-i18n="cancel">Abbrechen</button><button id="confirm-new-session" class="primary-button" data-i18n="startSession">Neue Sitzung starten</button></div></dialog>
   <noscript><p class="noscript">Please enable JavaScript to use InstrumentError.</p></noscript>
   <script src="./vendor/vexflow.js"></script>
-  <script type="module" src="./src/app.js?v=1.1.1"></script>
+  <script type="module" src="./src/app.js?v=1.2.0"></script>
 </body>
 </html>

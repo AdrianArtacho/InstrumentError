@@ -23,3 +23,5 @@
 @media(max-height:520px){.feedback-heading{grid-template-columns:24px minmax(0,1fr) auto;column-gap:8px}}
 @media(max-width:360px){.feedback-heading{grid-template-columns:23px minmax(0,1fr) auto;column-gap:6px}}
 .feedback-actions .milestone{min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.feedback-actions #correction-toggle{min-width:0}.feedback-actions #details-button{flex-shrink:0}
+
+#fullscreen-start{grid-column:1/-1;padding:5px 8px;font-size:11px}
