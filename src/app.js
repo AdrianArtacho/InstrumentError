@@ -194,6 +194,14 @@ function renderFeedback() {
   $('range-reference').textContent=`${t('rangeModel')}: ${t('rangeWritten')} ${noteName(low,lang())}–${noteName(high,lang())}; ${t('rangeSounding')} ${noteName(low+instrument.transpose,lang())}–${noteName(high+instrument.transpose,lang())}. ${instrument.rangeNotes[lang()]}`;
   const links=$('source-links');links.replaceChildren();
   if(instrument.source?.url){const link=element('a','',`${instrument.source.title} ↗`);link.href=instrument.source.url;link.target='_blank';link.rel='noopener';links.append(link);}
+  if (question.scenario === 'written-range' || question.ruleId === 'written-range') {
+    const label = lang() === 'de' ? 'Tonumfangstabellen von Adrián Artacho (MUK Drive) ↗' : 'Instrument range charts by Adrián Artacho (MUK Drive) ↗';
+    const chartLink = element('a', '', label);
+    chartLink.href = 'https://mukuni-my.sharepoint.com/:f:/g/personal/a_artacho_muk_ac_at/IgBVvBVP6pwGQ7s0uGhQiRvqAb90Msb3DzYXnXqyjsv2p8c?e=pzRmT0';
+    chartLink.target = '_blank';
+    chartLink.rel = 'noopener noreferrer';
+    links.append(chartLink);
+  }
   const ruleLink=element('a','',t('sourcesRules'));ruleLink.href='./docs/rules.md';ruleLink.target='_blank';ruleLink.rel='noopener';links.append(ruleLink);
   const stats=aggregateStats(state).session;
   $('milestone').hidden=!stats.answered||stats.answered%10!==0;
