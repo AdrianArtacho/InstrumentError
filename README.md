@@ -7,6 +7,8 @@ A browser quiz for learning instrument ranges and spotting errors in conventiona
 - 23 instrument models: strings, orchestral woodwinds, brass, and four mallet-percussion models.
 - Four independently selectable rules: written range, a chord for one ordinary wind player, an attack accent on a tied continuation, and conflicting ordinary arco/pizzicato instructions.
 - Properly engraved clefs, notes, accidentals, ties, articulations and dynamics. Transposing instruments use **written pitch**.
+- Compact training view: the score, answer buttons and short resolution stay on one screen. Instrument selection and full explanations open in dialogs.
+- Range questions sit at the fringes: correct anchors are 0–2 semitones inside a boundary, incorrect anchors 1–2 semitones outside. Supporting notes and corrections stay near the same edge.
 - Family and individual-instrument selection, German/English interface, keyboard controls and fullscreen for classroom use.
 - 10 points per right answer, accuracy, streaks, ten-question rounds and recent practice history. Current questions and session progress survive a reload in the same browser. New sessions preserve lifetime totals.
 - No account or backend. Answers stay in local browser storage. JSON export is available from **Progress**.
@@ -23,7 +25,7 @@ python3 -m http.server 8000
 
 Open `http://localhost:8000`. ES modules need an HTTP server rather than opening `index.html` directly. GitHub Pages serves the repository root. Paths are relative, including the locally bundled notation library and fonts.
 
-Keyboard: **K** = correct, **F** = incorrect, **Enter** = resolve / next. Answers remain changeable until Resolve. There is no timer.
+Keyboard: **K** = correct, **F** = incorrect, **Enter** = resolve / next. Answers remain changeable until Resolve. Enter then advances to the next example without scrolling. Settings are available through the gear button. There is no timer.
 
 Browser storage is device/browser specific; clearing site data removes saved progress. Private browsing or storage restrictions may prevent saving; the quiz displays a notice and remains usable for the current visit. Recent detail is bounded to 250 questions in the active session and 20 archived session summaries, while lifetime counters are retained. Export is a local backup/report, not an account sync or import feature.
 
@@ -33,11 +35,11 @@ Browser storage is device/browser specific; clearing site data removes saved pro
 npm test
 ```
 
-The test command uses Node's built-in runner and has no package dependencies. Tests check supported instrument/rule combinations, independent error detection, clean corrections, balanced non-repeating generation, transpositions, storage recovery, reloads, scoring exactly once and lifetime counters.
+The test command uses Node's built-in runner and has no package dependencies. Tests check supported instrument/rule combinations, independent error detection, clean corrections, balanced non-repeating generation, matched near-boundary examples for all 23 models, transpositions, storage recovery, reloads, scoring exactly once and lifetime counters.
 
 - [Instrument models, sources and extension guide](docs/rules.md)
 - [Notation renderer and dependency provenance](docs/notation.md)
-- [Verification and desktop/phone previews](artifacts/verification.md)
+- [Latest verification and desktop/phone previews](artifacts/verification-2026-11-18.md)
 - `src/instruments.js`: named instrument models and written pitch ranges.
 - `src/engine.js`: rule registry, generators, independent detectors and explanations.
 - `src/notation.js`: responsive SVG engraving with locally vendored VexFlow.

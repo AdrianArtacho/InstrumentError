@@ -85,7 +85,23 @@ function baseQuestion(instrument, rng) {
     dynamic, dynamics: dynamic, timeSignature: '4/4', issueNoteIndices: [],
   };
 }
+function prepareRangeScenario(question, instrument, rng) {
+  const direction = instrument.rangeErrorDirection || pick(['low', 'high'], rng);
+  const boundary = instrument.writtenRange[direction === 'low' ? 0 : 1];
+  const inward = direction === 'low' ? 1 : -1;
+  const anchorIndex = integer(0, question.notes.length - 1, rng);
+  const insideDistance = integer(0, 2, rng);
+  // Pick BOTH offsets before choosing the visible outcome. With an identical
+  // seed, correct/incorrect examples differ only at this preselected anchor.
+  const outsideDistance = integer(1, 2, rng);
+  question.notes.forEach((note) => {
+    setPitches(note, [boundary + inward * integer(0, 4, rng)]);
+  });
+  setPitches(question.notes[anchorIndex], [boundary + inward * insideDistance]);
+  question.rangeContext = { direction, boundary, anchorIndex, insideDistance, outsideDistance };
+}
 function prepareScenario(question, rule, instrument, rng) {
+  if (rule.id === 'written-range') prepareRangeScenario(question, instrument, rng);
   if (rule.id === 'tied-accent') {
     const pitch = question.notes[0].pitches[0];
     question.notes = [makeNote(pitch), makeNote(pitch), makeNote(question.notes[1].pitches[0]), makeNote(question.notes[2].pitches[0])];
@@ -98,25 +114,71 @@ function prepareScenario(question, rule, instrument, rng) {
   }
 }
 
-function injectRange(question, instrument, rng) {
-  const [low, high] = instrument.writtenRange;
-  const direction = instrument.rangeErrorDirection || pick(['low', 'high'], rng);
-  const distance = instrument.family === 'brass' ? integer(12, 16, rng) : integer(3, 7, rng);
-  const pitch = direction === 'low' ? low - distance : high + distance;
-  const index = integer(0, question.notes.length - 1, rng);
-  setPitches(question.notes[index], [pitch]);
-  question.issueNoteIndices = [index];
-  const reference = { de: `${noteName(low, 'de')}–${noteName(high, 'de')}`, en: `${noteName(low, 'en')}–${noteName(high, 'en')}` };
+function rangeReference(instrument, language) {
+  return instrument.writtenRange.map((pitch) => noteName(pitch, language)).join('–');
+}
+function correctRangeExplanation(question, instrument) {
+  const { direction, boundary, anchorIndex, insideDistance } = question.rangeContext;
+  const pitch = question.notes[anchorIndex].pitches[0];
+  const germanPosition = insideDistance === 0
+    ? `genau auf der ${direction === 'low' ? 'unteren' : 'oberen'} Grenze ${noteName(boundary, 'de')}`
+    : `${insideDistance} ${insideDistance === 1 ? 'Halbton' : 'Halbtöne'} innerhalb der ${direction === 'low' ? 'unteren' : 'oberen'} Grenze ${noteName(boundary, 'de')}`;
+  const englishPosition = insideDistance === 0
+    ? `exactly on the ${direction === 'low' ? 'lower' : 'upper'} boundary ${noteName(boundary, 'en')}`
+    : `${insideDistance} semitone${insideDistance === 1 ? '' : 's'} inside the ${direction === 'low' ? 'lower' : 'upper'} boundary ${noteName(boundary, 'en')}`;
+  return {
+    de: `Diese Grenzlage ist gültig: ${noteName(pitch, 'de')} liegt ${germanPosition}. Auch die benachbarten Töne bleiben im notierten Modellumfang ${rangeReference(instrument, 'de')}. ${instrument.rangeNotes.de} Der Modellumfang ist keine universelle technische Grenze.`,
+    en: `This edge-of-range example is valid: ${noteName(pitch, 'en')} lies ${englishPosition}. The neighbouring notes also remain within the model's written range ${rangeReference(instrument, 'en')}. ${instrument.rangeNotes.en} The reference range is not a universal technical limit.`,
+  };
+}
+function injectRange(question, instrument) {
+  const { direction, boundary, anchorIndex, outsideDistance } = question.rangeContext;
+  const pitch = boundary + (direction === 'low' ? -outsideDistance : outsideDistance);
+  setPitches(question.notes[anchorIndex], [pitch]);
+  question.issueNoteIndices = [anchorIndex];
   return {
     explanation: {
-      de: `${noteName(pitch, 'de')} liegt außerhalb des hier angegebenen notierten Umfangs (${reference.de}). ${instrument.rangeNotes.de} Die Grenzen sind ein Übungsmodell, keine universellen technischen Maxima.`,
-      en: `${noteName(pitch, 'en')} lies outside this model's written range (${reference.en}). ${instrument.rangeNotes.en} These are teaching boundaries, not universal technical maxima.`,
+      de: `${noteName(pitch, 'de')} liegt ${outsideDistance} ${outsideDistance === 1 ? 'Halbton' : 'Halbtöne'} ${direction === 'low' ? 'unter' : 'über'} der ${direction === 'low' ? 'unteren' : 'oberen'} Modellgrenze ${noteName(boundary, 'de')}. Die übrigen Töne liegen knapp innerhalb des notierten Umfangs ${rangeReference(instrument, 'de')}. ${instrument.rangeNotes.de} Die Grenzen sind ein Übungsmodell, keine universellen technischen Maxima.`,
+      en: `${noteName(pitch, 'en')} lies ${outsideDistance} semitone${outsideDistance === 1 ? '' : 's'} ${direction === 'low' ? 'below' : 'above'} the model's ${direction === 'low' ? 'lower' : 'upper'} boundary ${noteName(boundary, 'en')}. The other notes sit just inside the written range ${rangeReference(instrument, 'en')}. ${instrument.rangeNotes.en} These are teaching boundaries, not universal technical maxima.`,
     },
     correction: {
-      de: `Den markierten Ton in den notierten Modellumfang ${reference.de} legen. Die alternative Fassung zeigt eine mögliche Lösung.`,
-      en: `Move the highlighted pitch into the model's written range ${reference.en}. The alternative shows one possible solution.`,
+      de: `Nur den markierten Ton knapp auf die zulässige Seite der Modellgrenze ${noteName(boundary, 'de')} verschieben. Die alternative Fassung bleibt in derselben Grenzlage.`,
+      en: `Move only the highlighted note just onto the valid side of the boundary ${noteName(boundary, 'en')}. The alternative stays in the same edge-of-range register.`,
     },
   };
+}
+function questionFeedback(question, instrument, answer, ruleId) {
+  if (ruleId === 'written-range') {
+    const { direction, boundary, anchorIndex } = question.rangeContext;
+    const pitch = question.notes[anchorIndex].pitches[0];
+    const distance = Math.abs(pitch - boundary);
+    if (answer === 'correct' && distance === 0) return {
+      de: `${noteName(pitch, 'de')} ist die ${direction === 'low' ? 'tiefste' : 'höchste'} notierte Tonhöhe dieses Modells.`,
+      en: `${noteName(pitch, 'en')} is this model's ${direction === 'low' ? 'lowest' : 'highest'} written pitch.`,
+    };
+    return {
+      de: `${noteName(pitch, 'de')} liegt ${distance} ${distance === 1 ? 'Halbton' : 'Halbtöne'} ${pitch < boundary ? 'unter' : 'über'} der ${direction === 'low' ? 'unteren' : 'oberen'} Modellgrenze ${noteName(boundary, 'de')}${answer === 'correct' ? ' und damit innerhalb des Umfangs' : ' und damit außerhalb des Umfangs'}.`,
+      en: `${noteName(pitch, 'en')} is ${distance} semitone${distance === 1 ? '' : 's'} ${pitch < boundary ? 'below' : 'above'} the model's ${direction === 'low' ? 'lower' : 'upper'} boundary ${noteName(boundary, 'en')}, so it is ${answer === 'correct' ? 'inside' : 'outside'} the range.`,
+    };
+  }
+  if (answer === 'correct') return {
+    de: 'Tonhöhen, Haltebögen und Spielanweisungen enthalten keinen der geübten Fehler.',
+    en: 'The pitches, ties and playing instructions contain none of the practised errors.',
+  };
+  return {
+    'wind-chord': {
+      de: 'Ein einzelner Bläser kann diesen Dreiklang mit der vorausgesetzten gewöhnlichen Tonerzeugung nicht gleichzeitig spielen.',
+      en: 'One wind player cannot play this simultaneous triad with the ordinary tone production assumed here.',
+    },
+    'tied-accent': {
+      de: 'Der Anschlagsakzent steht auf der Fortsetzung eines gehaltenen Tons statt auf einem neuen Einsatz.',
+      en: 'The attack accent is on the continuation of a tied note rather than a fresh onset.',
+    },
+    'technique-conflict': {
+      de: 'Arco und gewöhnliches Pizzicato widersprechen sich hier als gleichzeitige Anweisungen für denselben Einsatz.',
+      en: 'Arco and ordinary pizzicato conflict here as simultaneous instructions for the same onset.',
+    },
+  }[ruleId];
 }
 function injectWindChord(question, instrument, rng) {
   const [low, high] = instrument.writtenRange;
@@ -222,7 +284,7 @@ export function generateQuestion(config = {}) {
       }
       if (rule.id === 'technique-conflict') corrected.technique = 'arco';
     } else {
-      question.explanation = {
+      question.explanation = rule.id === 'written-range' ? correctRangeExplanation(question, instrument) : {
         de: 'Im angegebenen Instrumentenmodell ist diese Fassung in Ordnung: Tonhöhen, normale Tonerzeugung, Haltebögen und Spielanweisungen enthalten keinen der geübten Fehler. Ein Akzent an einem neuen Einsatz ist zulässig.',
         en: 'For the specified instrument model, this example is valid: pitches, ordinary tone production, ties and technique instructions contain none of the errors practised here. An accent on a fresh attack is allowed.',
       };
@@ -230,7 +292,7 @@ export function generateQuestion(config = {}) {
     }
     Object.assign(question, {
       answer, ruleId: answer === 'incorrect' ? rule.id : null,
-      scenario: rule.id, corrected,
+      scenario: rule.id, corrected, feedback: questionFeedback(question, instrument, answer, rule.id),
       prompt: { de: 'Stimmt diese Instrumentenstimme im angegebenen Modell?', en: 'Is this instrument part valid for the specified model?' },
       scope: {
         de: 'Einzelne spielende Person; konventionelle Notation und gewöhnliche Tonerzeugung. Erweiterte Techniken, Skordatur, Spezialausstattung und nicht genannte Registererweiterungen sind ausgenommen.',

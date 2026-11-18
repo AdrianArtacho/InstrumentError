@@ -88,3 +88,78 @@ test('session generation balances answers, caps streaks and respects the full re
     assert.ok(last.length < 4 || !last.every((answer) => answer === last[0]));
   }
 });
+
+test('range fringes are matched near-edge examples for both outcomes across all 23 models', () => {
+  for (const instrument of INSTRUMENTS) {
+    const seenDirections = new Set();
+    const seenInsideDistances = new Set();
+    const seenOutsideDistances = new Set();
+    const seenAnchorPositions = new Set();
+    for (let seed = 0; seed < 180; seed += 1) {
+      const config = { instrumentIds: [instrument.id], ruleIds: ['written-range'] };
+      const correct = generateQuestion({ ...config, answer: 'correct', rng: createRng(seed) });
+      const incorrect = generateQuestion({ ...config, answer: 'incorrect', rng: createRng(seed) });
+      const { direction, boundary, anchorIndex, insideDistance, outsideDistance } = correct.rangeContext;
+      const inward = direction === 'low' ? 1 : -1;
+      seenDirections.add(direction);
+      seenInsideDistances.add(insideDistance);
+      seenOutsideDistances.add(outsideDistance);
+      seenAnchorPositions.add(anchorIndex);
+      assert.deepEqual(incorrect.rangeContext, correct.rangeContext);
+      assert.equal(boundary, instrument.writtenRange[direction === 'low' ? 0 : 1]);
+      assert.equal((correct.notes[anchorIndex].pitches[0] - boundary) * inward + 0, insideDistance);
+      assert.equal((incorrect.notes[anchorIndex].pitches[0] - boundary) * inward, -outsideDistance);
+      assert.ok(insideDistance >= 0 && insideDistance <= 2);
+      assert.ok(outsideDistance === 1 || outsideDistance === 2);
+      assert.deepEqual(incorrect.issueNoteIndices, [anchorIndex]);
+      assert.deepEqual(correct.issueNoteIndices, []);
+      assert.deepEqual(incorrect.corrected, correct.corrected);
+      assert.deepEqual(incorrect.corrected.notes, correct.notes);
+      assert.equal(correct.dynamic, incorrect.dynamic);
+      assert.equal(correct.technique, incorrect.technique);
+      assert.deepEqual(correct.ties, incorrect.ties);
+      for (let i = 0; i < correct.notes.length; i += 1) {
+        assert.equal(correct.notes[i].duration, incorrect.notes[i].duration);
+        assert.equal(correct.notes[i].articulation, incorrect.notes[i].articulation);
+        if (i !== anchorIndex) {
+          assert.deepEqual(correct.notes[i], incorrect.notes[i]);
+          const supportDistance = (correct.notes[i].pitches[0] - boundary) * inward;
+          assert.ok(supportDistance >= 0 && supportDistance <= 4);
+        }
+      }
+      for (const question of [correct, incorrect]) {
+        const pitches = question.notes.flatMap((note) => note.pitches);
+        assert.ok(Math.max(...pitches) - Math.min(...pitches) <= 6, `${instrument.id}: no giveaway register leap`);
+        assert.ok(question.feedback.de.includes(noteName(question.notes[anchorIndex].pitches[0], 'de')));
+        assert.ok(question.feedback.en.includes(noteName(question.notes[anchorIndex].pitches[0], 'en')));
+        assert.ok(question.feedback.de.includes(noteName(boundary, 'de')));
+        assert.ok(question.feedback.en.includes(noteName(boundary, 'en')));
+      }
+      assert.match(correct.explanation.en, /edge-of-range example is valid/);
+      assert.deepEqual(validateQuestion(correct), []);
+      assert.deepEqual(validateQuestion(incorrect).map((finding) => finding.ruleId), ['written-range']);
+      assert.deepEqual(validateQuestion({ ...incorrect, ...incorrect.corrected }), []);
+    }
+    assert.deepEqual(seenInsideDistances, new Set([0, 1, 2]), instrument.id);
+    assert.deepEqual(seenOutsideDistances, new Set([1, 2]), instrument.id);
+    assert.deepEqual(seenAnchorPositions, new Set([0, 1, 2]), instrument.id);
+    assert.deepEqual(seenDirections, new Set(instrument.rangeErrorDirection ? [instrument.rangeErrorDirection] : ['low', 'high']), instrument.id);
+  }
+});
+
+test('fringe-only sessions retain balanced answers and avoid repeated visuals', () => {
+  const rng = createRng('near-edge-session');
+  const recentSignatures = [];
+  const recentAnswers = [];
+  const seen = new Set();
+  for (let i = 0; i < 1000; i += 1) {
+    const question = generateQuestion({ ruleIds: ['written-range'], rng, recentSignatures, recentAnswers });
+    assert.ok(!seen.has(question.signature));
+    seen.add(question.signature);
+    recentSignatures.push(question.signature);
+    recentAnswers.push(question.answer);
+    assert.ok(Math.abs(recentAnswers.filter((answer) => answer === 'correct').length * 2 - recentAnswers.length) <= 2);
+    const last = recentAnswers.slice(-4);
+    assert.ok(last.length < 4 || !last.every((answer) => answer === last[0]));
+  }
+});

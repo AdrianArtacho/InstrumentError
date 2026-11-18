@@ -70,7 +70,7 @@ export function notationDescription(question, language = 'de', corrected = false
 export async function renderScore(container, question, options = {}) {
   const token = Symbol('score render');
   renderTokens.set(container, token);
-  const { reveal = false, corrected = false, language = 'de' } = options;
+  const { reveal = false, corrected = false, language = 'de', fit = false } = options;
   await prepareFonts();
   if (renderTokens.get(container) !== token) return;
 
@@ -78,21 +78,28 @@ export async function renderScore(container, question, options = {}) {
   const vf = vexflow();
   const { Renderer, Stave, StaveNote, Voice, Formatter, Accidental, Articulation, Annotation, StaveTie, ModifierPosition } = vf;
   container.replaceChildren();
+  if (fit) {
+    container.style.removeProperty('width');
+    container.style.removeProperty('height');
+  }
   // A compact logical canvas enlarges the engraving when the SVG fills the
-  // quiz card, keeping notation legible at classroom projection distances.
-  const width = 650;
+  // quiz card. Narrow fit-mode hosts use a shorter staff so noteheads remain
+  // readable without horizontal scrolling; CSS owns the available height.
+  const hostWidth = fit ? container.getBoundingClientRect().width : 0;
+  const width = fit && hostWidth > 0 && hostWidth < 560 ? 440 : 650;
   const height = 240;
   const renderer = new Renderer(container, Renderer.Backends.SVG);
   renderer.resize(width, height);
   // VexFlow also fixes its host element to the logical pixel width. Release
   // that size so the SVG can shrink inside a phone card and center on desktop.
-  container.style.width = '100%';
+  if (fit) container.style.removeProperty('width');
+  else container.style.width = '100%';
   container.style.removeProperty('height');
   const context = renderer.getContext();
   context.setFillStyle(INK).setStrokeStyle(INK);
 
   const clef = q.clef || 'treble';
-  const staveWidth = q.notes.length === 1 ? 300 : q.notes.length === 2 ? 430 : width - 70;
+  const staveWidth = Math.min(width - 70, q.notes.length === 1 ? 300 : q.notes.length === 2 ? 430 : width - 70);
   const stave = new Stave((width - staveWidth) / 2, 70, staveWidth)
     .addClef(clef)
     .setContext(context);
@@ -177,9 +184,10 @@ export async function renderScore(container, question, options = {}) {
   svg.removeAttribute('height');
   svg.style.display = 'block';
   svg.style.width = '100%';
-  svg.style.maxWidth = '900px';
-  svg.style.height = 'auto';
-  svg.style.overflow = 'visible';
+  svg.style.maxWidth = fit ? 'none' : '900px';
+  svg.style.height = fit ? '100%' : 'auto';
+  svg.style.overflow = fit ? 'hidden' : 'visible';
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
   svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', notationDescription(question, language, corrected));
   svg.setAttribute('focusable', 'false');
