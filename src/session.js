@@ -27,10 +27,12 @@ export function defaultState(config = {}) {
   };
 }
 
+const validMidi = pitch => Number.isInteger(pitch) && pitch >= 0 && pitch <= 127;
+
 function validNotes(notes) {
   return Array.isArray(notes) && notes.length >= 1 && notes.length <= 16 && notes.every(note =>
     isObject(note) && Array.isArray(note.pitches) && note.pitches.length >= 1 && note.pitches.length <= 8 &&
-    note.pitches.every(pitch => Number.isInteger(pitch) && pitch >= 0 && pitch <= 127) &&
+    note.pitches.every(validMidi) &&
     ['q', 'h', 'w', '8'].includes(note.duration) &&
     (note.articulation == null || ['accent', 'staccato', 'tenuto'].includes(note.articulation)));
 }
@@ -44,6 +46,10 @@ export function validStoredQuestion(question) {
   if (!isObject(question) || typeof question.id !== 'string' || !question.id || question.id.length > 300 || typeof question.instrumentId !== 'string' || !CHOICES.has(question.answer)) return false;
   if (!['treble', 'bass', 'alto', 'tenor', 'percussion'].includes(question.clef) || !validNotes(question.notes) || !validTies(question.ties ?? [], question.notes.length)) return false;
   if (question.corrected != null && (!isObject(question.corrected) || (question.corrected.notes && !validNotes(question.corrected.notes)) || (question.corrected.ties && !validTies(question.corrected.ties, question.corrected.notes?.length ?? question.notes.length)))) return false;
+  if (question.scenario === 'transposition' || question.ruleId === 'transposition' || question.soundingPitch != null) {
+    if (!validMidi(question.soundingPitch) || !validMidi(question.corrected?.soundingPitch) ||
+        question.notes.length !== 1 || question.notes[0].pitches.length !== 1) return false;
+  }
   return true;
 }
 

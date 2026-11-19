@@ -25,3 +25,53 @@
 .feedback-actions .milestone{min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.feedback-actions #correction-toggle{min-width:0}.feedback-actions #details-button{flex-shrink:0}
 
 #fullscreen-start{grid-column:1/-1;padding:5px 8px;font-size:11px}
+
+.score-display {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+}
+.score-display.with-concert {
+  grid-template-columns: minmax(0, 1fr) clamp(150px, 20vw, 248px);
+  align-items: end;
+}
+.score-display > .score { height: 100%; }
+.concert-pitch {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  margin: 4px 16px 6px 0;
+  padding: 8px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 2px;
+  height: min(calc(100% - 10px), 200px);
+  min-height: 0;
+}
+.concert-caption { text-align: center; color: var(--muted); font-size: .75rem; line-height: 1.2; }
+.concert-caption strong { display: block; color: var(--ink); font-size: 1rem; }
+#concert-score { min-height: 0; min-width: 0; }
+#play-concert { padding: 4px 7px; justify-self: center; font-size: .8rem; min-height: 30px; }
+#play-concert.audio-unavailable { border-color: var(--red); }
+.concert-mismatch { border-color: var(--red); }
+.concert-mismatch .concert-caption strong { color: var(--red); }
+@media (max-width: 570px) {
+  .score-display.with-concert {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) min(47%, 134px);
+  }
+  .concert-pitch { justify-self: end; width: 146px; height: calc(100% - 10px); margin-right: 12px; }
+}
+@media (max-height: 550px) {
+  .score-display.with-concert {
+    grid-template-columns: minmax(0, 1fr) minmax(122px, 28%);
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .concert-pitch { width: auto; justify-self: stretch; padding: 3px; }
+  .concert-caption strong { display: inline; margin-inline-start: .2em; font-size: .8rem; }
+}
+.concert-corrected { border-color: var(--teal); }
+.concert-corrected .concert-caption strong { color: var(--teal); }

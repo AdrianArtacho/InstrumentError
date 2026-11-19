@@ -5,7 +5,8 @@ A browser quiz for learning instrument ranges and spotting errors in conventiona
 **[Open the quiz →](https://adrianartacho.github.io/InstrumentError/)**
 
 - 23 instrument models: strings, orchestral woodwinds, brass, and four mallet-percussion models.
-- Four independently selectable rules: written range, a chord for one ordinary wind player, an attack accent on a tied continuation, and conflicting ordinary arco/pizzicato instructions.
+- Five independently selectable rules: written range, transposition, a chord for one ordinary wind player, an attack accent on a tied continuation, and conflicting ordinary arco/pizzicato instructions.
+- In transposition exercises, compare the written note with the proposed concert pitch. **Play pitch** sounds the pitch shown; after resolving an error, the correction shows and plays the matching concert pitch. Includes non-transposing instruments.
 - Properly engraved clefs, notes, accidentals, ties, articulations and dynamics. Transposing instruments use **written pitch**.
 - Compact training view: the score, answer buttons and short resolution stay on one screen. Instrument selection and full explanations open in dialogs.
 - Range questions sit at the fringes: correct anchors are 0–2 semitones inside a boundary, incorrect anchors 1–2 semitones outside. Supporting notes and corrections stay near the same edge.
@@ -34,12 +35,14 @@ Browser storage is device/browser specific; clearing site data removes saved pro
 Open Settings, choose instruments and error types, and copy the exercise link shown there. The link reflects the current selection in the dialog, even before you apply it.
 
 - `instruments`: comma-separated instrument IDs or family IDs (`strings`, `woodwinds`, `brass`, `percussion`). Mix families and individual IDs as needed.
-- `errors`: comma-separated rule IDs: `written-range`, `wind-chord`, `tied-accent`, `technique-conflict`.
+- `errors`: comma-separated rule IDs: `written-range`, `wind-chord`, `tied-accent`, `technique-conflict`, `transposition`.
 - `fullscreen=1`: offers a Start fullscreen button. Browsers require a click to enter native fullscreen.
 
 Omitting either filter includes all items in that category. The app uses only instruments that support at least one selected error type. Invalid selections fall back to regular settings. Filtered links save progress separately from ordinary practice.
 
 [Example: violin and viola range practice with fullscreen offered](https://adrianartacho.github.io/InstrumentError/?instruments=violin,viola&errors=written-range&fullscreen=1)
+
+[Try transposition practice](https://adrianartacho.github.io/InstrumentError/?errors=transposition) or [mix B♭ clarinet, F horn, piccolo and flute](https://adrianartacho.github.io/InstrumentError/?errors=transposition&instruments=clarinet-bb,horn-f,piccolo,flute).
 
 ## Development
 

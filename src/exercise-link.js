@@ -1,5 +1,5 @@
 import { INSTRUMENTS } from './instruments.js';
-import { RULES, getEligibleInstruments } from './engine.js?v=1.1.1';
+import { RULES, getEligibleInstruments } from './engine.js?v=1.3.0';
 
 export function readExerciseLink(params) {
   const list = key => params.getAll(key).flatMap(value => value.split(',')).map(value => value.trim()).filter(Boolean);

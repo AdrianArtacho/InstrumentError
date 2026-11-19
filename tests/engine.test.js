@@ -54,12 +54,14 @@ test('every instrument/rule/answer combination has exactly the advertised findin
           const question = generateQuestion({ instrumentIds: [instrument.id], ruleIds: [rule.id], answer, rng });
           assert.equal(question.instrumentId, instrument.id);
           assert.equal(question.answer, answer);
-          assert.equal(question.notes.reduce((beats, n) => beats + ({ q: 1, h: 2 }[n.duration]), 0), 4);
+          if (rule.id === 'transposition') assert.equal(question.notes.length, 1);
+          else assert.equal(question.notes.reduce((beats, n) => beats + ({ q: 1, h: 2 }[n.duration]), 0), 4);
           const findings = validateQuestion(question);
           assert.equal(findings.length, answer === 'correct' ? 0 : 1, `${instrument.id}/${rule.id}/${answer}`);
           if (answer === 'incorrect') {
             assert.equal(findings[0].ruleId, rule.id);
-            assert.ok(question.issueNoteIndices.length > 0);
+            if (rule.id === 'transposition') assert.deepEqual(question.issueNoteIndices, []);
+            else assert.ok(question.issueNoteIndices.length > 0);
           }
           assert.deepEqual(validateQuestion({ ...question, ...question.corrected }), []);
           assert.deepEqual(JSON.parse(JSON.stringify(question)), question);
@@ -71,6 +73,58 @@ test('every instrument/rule/answer combination has exactly the advertised findin
       }
     }
   }
+});
+
+test('transposition detector checks concert register and pitch against written pitch', () => {
+  const cases = [
+    ['horn-f', 60, 53], ['clarinet-bb', 60, 58], ['clarinet-a', 60, 57],
+    ['bass-clarinet', 60, 46], ['piccolo', 62, 74], ['double-bass', 52, 40],
+    ['glockenspiel', 60, 84], ['viola', 60, 60], ['bassoon', 48, 48],
+  ];
+  for (const [instrumentId, written, soundingPitch] of cases) {
+    const question = { instrumentId, notes: [{ pitches: [written] }], soundingPitch };
+    assert.deepEqual(validateQuestion(question), [], instrumentId);
+    for (const offset of [-12, -1, 1, 12]) {
+      assert.deepEqual(validateQuestion({ ...question, soundingPitch: soundingPitch + offset }), [
+        { ruleId: 'transposition', issueNoteIndices: [] },
+      ], instrumentId);
+    }
+  }
+});
+
+test('transposition examples vary the concert pitch without changing the same-seed written note', () => {
+  for (const instrument of INSTRUMENTS) {
+    const inaccuracies = new Set();
+    for (let seed = 0; seed < 30; seed += 1) {
+      const config = { ruleIds: ['transposition'], instrumentIds: [instrument.id] };
+      const correct = generateQuestion({ ...config, answer: 'correct', rng: createRng(seed) });
+      const incorrect = generateQuestion({ ...config, answer: 'incorrect', rng: createRng(seed) });
+      const [written] = correct.notes[0].pitches;
+      const [low, high] = instrument.writtenRange;
+      const shift = instrument.transpose;
+      assert.deepEqual(correct.notes, incorrect.notes);
+      assert.equal(correct.soundingPitch, written + shift);
+      assert.equal(incorrect.corrected.soundingPitch, correct.soundingPitch);
+      assert.notEqual(incorrect.soundingPitch, correct.soundingPitch);
+      assert.ok(incorrect.soundingPitch >= low + shift && incorrect.soundingPitch <= high + shift);
+      assert.notEqual(correct.signature, incorrect.signature);
+      inaccuracies.add(incorrect.soundingPitch - written);
+    }
+    assert.ok(inaccuracies.size > 1, instrument.id);
+  }
+});
+
+test('a long single-instrument transposition drill can reuse notation without reusing round IDs', () => {
+  const rng = createRng('single-instrument-transposition');
+  const recentSignatures = [];
+  const ids = new Set();
+  for (let i = 0; i < 90; i += 1) {
+    const question = generateQuestion({ ruleIds: ['transposition'], instrumentIds: ['tuba-f'], answer: 'correct', rng, recentSignatures });
+    assert.ok(!ids.has(question.id));
+    ids.add(question.id);
+    recentSignatures.push(question.signature);
+  }
+  assert.ok(new Set(recentSignatures).size < ids.size, 'the finite pool was exercised');
 });
 
 test('session generation balances answers, caps streaks and respects the full recent-signature list', () => {

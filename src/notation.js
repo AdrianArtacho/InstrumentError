@@ -70,7 +70,7 @@ export function notationDescription(question, language = 'de', corrected = false
 export async function renderScore(container, question, options = {}) {
   const token = Symbol('score render');
   renderTokens.set(container, token);
-  const { reveal = false, corrected = false, language = 'de', fit = false } = options;
+  const { reveal = false, corrected = false, language = 'de', fit = false, miniature = false } = options;
   await prepareFonts();
   if (renderTokens.get(container) !== token) return;
 
@@ -86,8 +86,8 @@ export async function renderScore(container, question, options = {}) {
   // quiz card. Narrow fit-mode hosts use a shorter staff so noteheads remain
   // readable without horizontal scrolling; CSS owns the available height.
   const hostWidth = fit ? container.getBoundingClientRect().width : 0;
-  const width = fit && hostWidth > 0 && hostWidth < 560 ? 440 : 650;
-  const height = 240;
+  const width = miniature ? 200 : fit && hostWidth > 0 && hostWidth < 560 ? 440 : 650;
+  const height = miniature ? 175 : 240;
   const renderer = new Renderer(container, Renderer.Backends.SVG);
   renderer.resize(width, height);
   // VexFlow also fixes its host element to the logical pixel width. Release
@@ -100,7 +100,7 @@ export async function renderScore(container, question, options = {}) {
 
   const clef = q.clef || 'treble';
   const staveWidth = Math.min(width - 70, q.notes.length === 1 ? 300 : q.notes.length === 2 ? 430 : width - 70);
-  const stave = new Stave((width - staveWidth) / 2, 70, staveWidth)
+  const stave = new Stave((width - staveWidth) / 2, miniature ? 28 : 70, staveWidth)
     .addClef(clef)
     .setContext(context);
   stave.setBegBarType(vf.Barline.type.SINGLE);

@@ -1,9 +1,10 @@
-import { readExerciseLink, makeExerciseLink } from './exercise-link.js?v=1.2.0';
+import { playPitch, stopPitch } from './pitch-audio.js?v=1.3.0';
+import { readExerciseLink, makeExerciseLink } from './exercise-link.js?v=1.3.0';
 import { FAMILIES, INSTRUMENTS, getInstrument, noteName } from './instruments.js';
-import { RULES, getRule, generateQuestion, getEligibleInstruments, validateQuestion } from './engine.js?v=1.1.1';
-import { loadState, defaultState, saveState, selectAnswer, resolveAnswer, setQuestion, newSession, aggregateStats } from './session.js';
-import { renderScore } from './notation.js?v=1.1.1';
-import { TEXT } from './i18n.js?v=1.2.0';
+import { RULES, getRule, generateQuestion, getEligibleInstruments, validateQuestion } from './engine.js?v=1.3.0';
+import { loadState, defaultState, saveState, selectAnswer, resolveAnswer, setQuestion, newSession, aggregateStats } from './session.js?v=1.3.0';
+import { renderScore } from './notation.js?v=1.3.0';
+import { TEXT } from './i18n.js?v=1.3.0';
 
 const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -134,6 +135,35 @@ function makeQuestion() {
   const question=generateQuestion({...state.config,recentSignatures:rounds.map(r=>r.question.signature),recentAnswers:rounds.slice(-12).map(r=>r.question.answer)});
   state=setQuestion(state,question);showCorrected=false;persist();updateStats();
 }
+let shownConcertPitch;
+let shownConcertQuestion;
+function concertPitch(question) {
+  return showCorrected ? question.corrected?.soundingPitch ?? question.soundingPitch : question.soundingPitch;
+}
+function updateConcertPitch(question, phase) {
+  const midi = concertPitch(question);
+  if (midi !== shownConcertPitch || question.id !== shownConcertQuestion) {
+    stopPitch();
+    $('concert-audio-status').textContent = '';
+    $('play-concert').classList.remove('audio-unavailable');
+  }
+  shownConcertPitch = midi;
+  shownConcertQuestion = question.id;
+  const panel = $('concert-pitch');
+  const active = Number.isInteger(midi);
+  panel.hidden = !active;
+  panel.closest('.score-display').classList.toggle('with-concert', active);
+  if (!active) return;
+  panel.classList.toggle('concert-corrected', showCorrected);
+  panel.classList.toggle('concert-mismatch', phase === 'resolved' && question.answer === 'incorrect' && !showCorrected);
+  $('concert-label').textContent = t(showCorrected ? 'concertCorrected' : 'concertReference');
+  $('concert-note-name').textContent = noteName(midi,lang());
+  $('play-concert').disabled = !globalThis.AudioContext && !globalThis.webkitAudioContext;
+  const unavailable = $('play-concert').disabled || $('play-concert').classList.contains('audio-unavailable');
+  $('play-concert').title = t(unavailable ? 'audioUnavailable' : 'playConcert');
+  $('play-concert').querySelector('[data-i18n]').textContent = t(unavailable ? 'audioUnavailableShort' : 'playConcert');
+  return { clef: midi < 60 ? 'bass' : 'treble', notes: [{ pitches: [midi], duration: 'q' }] };
+}
 async function drawQuestion() {
   const current=state.active.current;if(!current)return;
   const version=++renderVersion;busy=true;
@@ -143,12 +173,19 @@ async function drawQuestion() {
   $('instrument-family').textContent=familyName(instrument.family);
   $('question-heading').textContent=name(instrument);
   $('clef-label').textContent=t(question.clef);
-  $('question-card').classList.toggle('is-corrected',showCorrected);
-  document.querySelector('.notation-badge').textContent=t(showCorrected?'notationCorrected':'writtenPitch');
+  const correctedNotation = showCorrected && !Number.isInteger(question.soundingPitch);
+  $('question-card').classList.toggle('is-corrected',correctedNotation);
+  document.querySelector('.notation-badge').textContent=t(correctedNotation?'notationCorrected':'writtenPitch');
   $('score').setAttribute('aria-busy','true');
+  const concert = updateConcertPitch(question,phase);
   updateAnswerControls();
   try {
-    await renderScore($('score'),question,{reveal:phase==='resolved',corrected:showCorrected,language:lang(),fit:true});
+    const engraving = renderScore($('score'),question,{reveal:phase==='resolved',corrected:correctedNotation,language:lang(),fit:true});
+    if (concert) {
+      await Promise.all([engraving, renderScore($('concert-score'),concert,{language:lang(),fit:true,miniature:true})]);
+    } else {
+      await engraving;
+    }
     if(version!==renderVersion)return;
     busy=false;$('score').setAttribute('aria-busy','false');
   } catch(error) {
@@ -170,6 +207,9 @@ function updateAnswerControls() {
   $('next-button').disabled=busy;
   $('feedback-placeholder').hidden=resolved;
   $('main').dataset.phase=current?.phase??'answer';
+  const prompt = t(Number.isInteger(current?.question.soundingPitch) ? 'transpositionPrompt' : 'answerPrompt');
+  $('answer-prompt').textContent = prompt;
+  document.querySelector('.answer-section').setAttribute('aria-label',prompt);
   $('answer-instruction').textContent=t(current?.phase==='chosen'?'changeChoice':'answerInstruction');
   $('feedback').hidden=!resolved;
   if(resolved)renderFeedback();
@@ -244,6 +284,25 @@ function renderProgress() {
     list.append(row);
   }
 }
+$('play-concert').addEventListener('click',async()=>{
+  const question = state.active.current?.question;
+  if (!question || busy) return;
+  const midi = concertPitch(question);
+  if (!Number.isInteger(midi)) return;
+  try {
+    if (!await playPitch(midi) || shownConcertQuestion !== question.id || shownConcertPitch !== midi) return;
+    $('play-concert').querySelector('[data-i18n]').textContent = t('playConcert');
+    $('play-concert').title = t('playConcert');
+    $('concert-audio-status').textContent = '';
+    $('play-concert').classList.remove('audio-unavailable');
+  } catch {
+    if (shownConcertQuestion !== question.id || shownConcertPitch !== midi) return;
+    $('concert-audio-status').textContent = t('audioUnavailable');
+    $('play-concert').classList.add('audio-unavailable');
+    $('play-concert').querySelector('[data-i18n]').textContent = t('audioUnavailableShort');
+    $('play-concert').title = t('audioUnavailable');
+  }
+});
 $('answer-correct').addEventListener('click',()=>choose('correct'));
 $('answer-incorrect').addEventListener('click',()=>choose('incorrect'));
 $('resolve-button').addEventListener('click',resolve);

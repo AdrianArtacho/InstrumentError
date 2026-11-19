@@ -22,6 +22,11 @@ export const RULES = [
     description: { de: 'Arco und gewöhnliches Pizzicato für denselben Einsatz.', en: 'Arco and ordinary pizzicato for the same attack.' },
     supports: (instrument) => instrument.family === 'strings',
   },
+  {
+    id: 'transposition', names: { de: 'Transposition', en: 'Transposition' },
+    description: { de: 'Passt die angegebene klingende Tonhöhe zur notierten Note?', en: 'Does the proposed concert pitch match the written note?' },
+    supports: (instrument) => instrument.pitched && Number.isInteger(instrument.transpose),
+  },
 ];
 export const getRule = (id) => RULES.find((rule) => rule.id === id);
 
@@ -101,6 +106,10 @@ function prepareRangeScenario(question, instrument, rng) {
   question.rangeContext = { direction, boundary, anchorIndex, insideDistance, outsideDistance };
 }
 function prepareScenario(question, rule, instrument, rng) {
+  if (rule.id === 'transposition') {
+    prepareTransposition(question, instrument, rng);
+    return;
+  }
   if (rule.id === 'written-range') prepareRangeScenario(question, instrument, rng);
   if (rule.id === 'tied-accent') {
     const pitch = question.notes[0].pitches[0];
@@ -112,6 +121,77 @@ function prepareScenario(question, rule, instrument, rng) {
     const articulationIndex = integer(0, question.notes.length - 1, rng);
     if (rng() < 0.65) question.notes[articulationIndex].articulation = pick(['accent', 'staccato'], rng);
   }
+}
+
+// Letter steps are distinct from semitone steps: e.g. a minor third descends
+// two letters. Choose pitches whose default spelling preserves that interval
+// in the MIDI-based renderer (avoids writing A-flat for an expected G-sharp).
+const transpositionIntervals = {
+  '-14': [-8, 'eine große None', 'a major ninth'],
+  '-12': [-7, 'eine Oktave', 'an octave'],
+  '-7': [-4, 'eine reine Quinte', 'a perfect fifth'],
+  '-3': [-2, 'eine kleine Terz', 'a minor third'],
+  '-2': [-1, 'eine große Sekunde', 'a major second'],
+  0: [0, '', ''],
+  12: [7, 'eine Oktave', 'an octave'],
+  24: [14, 'zwei Oktaven', 'two octaves'],
+};
+function prepareTransposition(question, instrument, rng) {
+  const [start, end] = { treble: [55, 84], alto: [48, 72], bass: [36, 64] }[instrument.clef] || [55, 84];
+  const [low, high] = instrument.writtenRange;
+  const shift = instrument.transpose;
+  const interval = transpositionIntervals[shift];
+  const letter = midi => 'CDEFGAB'.indexOf(noteName(midi, 'en')[0]);
+  const choices = [];
+  for (let midi = Math.max(low, start); midi <= Math.min(high, end); midi += 1) {
+    if (!interval || (letter(midi + shift) - letter(midi) - interval[0]) % 7 === 0) choices.push(midi);
+  }
+  const written = pick(choices.length ? choices : playablePitches(instrument), rng);
+  question.notes = [makeNote(written, pick(['q', 'h'], rng))];
+  question.technique = null;
+  question.dynamic = null;
+  question.dynamics = null;
+  delete question.timeSignature;
+  question.soundingPitch = written + shift;
+}
+
+function transpositionExplanation(question, instrument) {
+  const written = question.notes[0].pitches[0];
+  const shift = instrument.transpose;
+  const actual = written + shift;
+  if (!shift) return {
+    de: `Notiert ${noteName(written, 'de')} klingt als ${noteName(actual, 'de')}: Das Instrument klingt wie notiert.`,
+    en: `Written ${noteName(written, 'en')} sounds as ${noteName(actual, 'en')}: the instrument sounds as written.`,
+  };
+  const [, deInterval, enInterval] = transpositionIntervals[shift] ??
+    [0, `${Math.abs(shift)} Halbtöne`, `${Math.abs(shift)} semitones`];
+  return {
+    de: `Notiert ${noteName(written, 'de')} klingt als ${noteName(actual, 'de')} (${deInterval} ${shift < 0 ? 'tiefer' : 'höher'}).`,
+    en: `Written ${noteName(written, 'en')} sounds as ${noteName(actual, 'en')} (${enInterval} ${shift < 0 ? 'lower' : 'higher'}).`,
+  };
+}
+
+function injectTransposition(question, instrument, rng) {
+  const written = question.notes[0].pitches[0];
+  const shift = instrument.transpose;
+  const actual = written + shift;
+  const [low, high] = instrument.writtenRange;
+  // Try familiar mistakes (ignoring/reversing the shift, wrong octave,
+  // neighbouring interval), keeping the proposed pitch in the concert range.
+  const alternatives = [...new Set([written, written - shift, actual - 12, actual + 12, actual - 2, actual - 1, actual + 1, actual + 2])]
+    .filter(pitch => pitch !== actual && pitch >= low + shift && pitch <= high + shift);
+  question.soundingPitch = pick(alternatives, rng);
+  const explanation = transpositionExplanation(question, instrument);
+  return {
+    explanation: {
+      de: `Angegeben ist ${noteName(question.soundingPitch, 'de')}. ${explanation.de}`,
+      en: `The proposed pitch is ${noteName(question.soundingPitch, 'en')}. ${explanation.en}`,
+    },
+    correction: {
+      de: `Die klingende Tonhöhe auf ${noteName(actual, 'de')} korrigieren.`,
+      en: `Change the concert pitch to ${noteName(actual, 'en')}.`,
+    },
+  };
 }
 
 function rangeReference(instrument, language) {
@@ -148,6 +228,7 @@ function injectRange(question, instrument) {
   };
 }
 function questionFeedback(question, instrument, answer, ruleId) {
+  if (ruleId === 'transposition') return transpositionExplanation(question, instrument);
   if (ruleId === 'written-range') {
     const { direction, boundary, anchorIndex } = question.rangeContext;
     const pitch = question.notes[anchorIndex].pitches[0];
@@ -226,7 +307,7 @@ function injectTechnique(question) {
     },
   };
 }
-const injectors = { 'written-range': injectRange, 'wind-chord': injectWindChord, 'tied-accent': injectTiedAccent, 'technique-conflict': injectTechnique };
+const injectors = { 'written-range': injectRange, 'wind-chord': injectWindChord, 'tied-accent': injectTiedAccent, 'technique-conflict': injectTechnique, transposition: injectTransposition };
 
 /** Independent detectors; metadata such as answer/ruleId is never trusted. */
 export function validateQuestion(question) {
@@ -241,10 +322,14 @@ export function validateQuestion(question) {
   const accents = (question.ties || []).flatMap((tie) => question.notes[tie.to]?.articulation === 'accent' ? [tie.to] : []);
   if (accents.length) findings.push({ ruleId: 'tied-accent', issueNoteIndices: [...new Set(accents)] });
   if (instrument.family === 'strings' && question.technique === 'arco + pizz.') findings.push({ ruleId: 'technique-conflict', issueNoteIndices: [0] });
+  if (question.soundingPitch !== undefined &&
+      question.soundingPitch !== question.notes[0]?.pitches[0] + instrument.transpose) {
+    findings.push({ ruleId: 'transposition', issueNoteIndices: [] });
+  }
   return findings;
 }
 function signature(question) {
-  return JSON.stringify({ instrumentId: question.instrumentId, clef: question.clef, notes: question.notes, ties: question.ties, technique: question.technique, dynamic: question.dynamic });
+  return JSON.stringify({ instrumentId: question.instrumentId, clef: question.clef, notes: question.notes, ties: question.ties, technique: question.technique, dynamic: question.dynamic, soundingPitch: question.soundingPitch });
 }
 /** Returns data only. UI must hide explanation/correction until Resolve.
  * Optional answer forces a type; otherwise 50/50 random. Pass recentAnswers to
@@ -256,7 +341,8 @@ export function generateQuestion(config = {}) {
   const eligible = getEligibleInstruments(config);
   if (!eligible.length) throw new RangeError('No instruments support the selected rules and filters.');
   const rules = activeRules(config);
-  const recent = new Set(config.recentSignatures || []);
+  const recent = new Map((config.recentSignatures || []).map((value, index) => [value, index]));
+  let oldestTransposition;
   const recentAnswers = config.recentAnswers || [];
   let answer = config.answer;
   if (answer === undefined) {
@@ -274,7 +360,7 @@ export function generateQuestion(config = {}) {
     const rule = pick(rules.filter((candidate) => candidate.supports(instrument)), rng);
     const question = baseQuestion(instrument, rng);
     prepareScenario(question, rule, instrument, rng);
-    const corrected = clone({ notes: question.notes, ties: question.ties, technique: question.technique });
+    const corrected = clone({ notes: question.notes, ties: question.ties, technique: question.technique, soundingPitch: question.soundingPitch });
     if (answer === 'incorrect') {
       const details = injectors[rule.id](question, instrument, rng);
       Object.assign(question, details);
@@ -284,7 +370,8 @@ export function generateQuestion(config = {}) {
       }
       if (rule.id === 'technique-conflict') corrected.technique = 'arco';
     } else {
-      question.explanation = rule.id === 'written-range' ? correctRangeExplanation(question, instrument) : {
+      question.explanation = rule.id === 'written-range' ? correctRangeExplanation(question, instrument) :
+        rule.id === 'transposition' ? transpositionExplanation(question, instrument) : {
         de: 'Im angegebenen Instrumentenmodell ist diese Fassung in Ordnung: Tonhöhen, normale Tonerzeugung, Haltebögen und Spielanweisungen enthalten keinen der geübten Fehler. Ein Akzent an einem neuen Einsatz ist zulässig.',
         en: 'For the specified instrument model, this example is valid: pitches, ordinary tone production, ties and technique instructions contain none of the errors practised here. An accent on a fresh attack is allowed.',
       };
@@ -305,6 +392,15 @@ export function generateQuestion(config = {}) {
     const correctionFindings = validateQuestion({ ...question, ...corrected });
     if (findings.length !== (answer === 'incorrect' ? 1 : 0) || (findings[0] && findings[0].ruleId !== question.ruleId) || correctionFindings.length) throw new Error('Question invariant failed');
     if (!recent.has(question.signature)) return question;
+    if (rule.id === 'transposition' && (!oldestTransposition ||
+        recent.get(question.signature) < recent.get(oldestTransposition.signature))) oldestTransposition = question;
+  }
+  // A single-instrument transposition link has few distinct one-note correct
+  // examples. Let practice continue after that pool is exhausted, with a fresh
+  // round ID so the session store can score the repeated visual separately.
+  if (oldestTransposition) {
+    oldestTransposition.id += `-repeat-${(rng() * 2 ** 32 >>> 0).toString(36)}`;
+    return oldestTransposition;
   }
   throw new RangeError('The selected question pool is exhausted. Broaden the selection or start a new session.');
 }
