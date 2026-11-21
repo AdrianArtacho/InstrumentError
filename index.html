@@ -7,7 +7,7 @@
   <meta name="description" content="Train your orchestration eye: spot range and notation errors in generated musical examples.">
   <title>InstrumentError · Instrumentation training</title>
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=1.4.0">
+  <link rel="stylesheet" href="./styles.css?v=1.5.0">
 </head>
 <body class="training-app">
   <a class="skip-link" href="#question-heading" data-i18n="skip">Zur Aufgabe</a>
@@ -40,6 +40,7 @@
         </div>
         <span class="clef-badge" id="clef-label"></span>
         <span id="pitch-view-hint" class="pitch-view-hint" data-i18n="viewAfterResolve" hidden>Klingend nach dem Auflösen</span>
+        <a id="entry-current-link" class="pitch-view-hint" href="./note-entry.html" data-i18n="entryPractice" hidden>Note eingeben ↗</a>
       </div>
       <div class="score-display">
         <div id="score" class="score" aria-busy="true"><p class="loading-message" data-i18n="loading">Noten werden gesetzt …</p></div>
@@ -85,6 +86,11 @@
           <p class="selection-status" id="selection-status" aria-live="polite"></p>
           <div class="sidebar-tip"><span class="tip-mark" aria-hidden="true">i</span><p data-i18n="scopeShort">Gewöhnliche Spielweise und Standardnotation. Pro Aufgabe höchstens ein Fehler.</p><button class="inline-link" id="help-button" data-i18n="howItWorks">So funktioniert’s ↗</button></div>
         </div>
+    <section class="entry-mode-links" aria-labelledby="entry-mode-heading">
+      <h3 id="entry-mode-heading" data-i18n="entryPracticeTitle">Transposition: Note eingeben</h3>
+      <a id="entry-forward-link" href="./note-entry.html?direction=written-to-sounding" data-i18n="entryForward">Notiert → Klingend</a>
+      <a id="entry-reverse-link" href="./note-entry.html?direction=sounding-to-written" data-i18n="entryReverse">Klingend → Notiert</a>
+    </section>
     <p><label for="share-url" data-i18n="shareLink">Übungslink zum Kopieren</label><br><input id="share-url" type="url" readonly style="width:100%"></p>
     <p><label><input id="share-fullscreen" type="checkbox"> <span data-i18n="shareFullscreen">Vollbild anbieten</span></label></p>
     <div class="settings-footer"><button id="new-session" class="secondary-button" data-i18n="newSession">Neue Sitzung</button><button class="primary-button dialog-close" data-i18n="backToTraining">Zum Training</button></div>
@@ -102,6 +108,6 @@
 <dialog id="new-session-dialog" class="app-dialog small-dialog"><div class="dialog-heading"><h2 data-i18n="newSessionQuestion">Neue Sitzung beginnen?</h2><button class="dialog-close icon-button" aria-label="Schließen">×</button></div><p data-i18n="newSessionHint">Die aktuelle Sitzung bleibt im Gesamtfortschritt erhalten. Punkte und Serie dieser Sitzung starten bei null.</p><div class="dialog-actions"><button class="secondary-button dialog-close" data-i18n="cancel">Abbrechen</button><button id="confirm-new-session" class="primary-button" data-i18n="startSession">Neue Sitzung starten</button></div></dialog>
   <noscript><p class="noscript">Please enable JavaScript to use InstrumentError.</p></noscript>
   <script src="./vendor/vexflow.js"></script>
-  <script type="module" src="./src/app.js?v=1.4.1"></script>
+  <script type="module" src="./src/app.js?v=1.5.0"></script>
 </body>
 </html>

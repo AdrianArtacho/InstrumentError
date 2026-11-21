@@ -108,3 +108,6 @@
   .concert-caption strong { display: inline; margin-inline-start: .2em; font-size: .88rem; }
   #play-concert { min-height: 27px; font-size: .78rem; padding-block: 2px; }
 }
+
+.entry-mode-links { padding: 0 0 8px; }
+.entry-mode-links a { display: inline-block; margin: 0 14px 7px 0; font-size: .87rem; }

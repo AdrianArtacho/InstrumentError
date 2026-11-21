@@ -1,4 +1,5 @@
 import { INSTRUMENTS, getInstrument, noteName } from './instruments.js';
+import { transposeKey } from './pitch-view.js?v=1.5.0';
 
 /** Rules are independent: add a generator and detector to extend the quiz. */
 export const RULES = [
@@ -403,4 +404,119 @@ export function generateQuestion(config = {}) {
     return oldestTransposition;
   }
   throw new RangeError('The selected question pool is exhausted. Broaden the selection or start a new session.');
+}
+
+export const ENTRY_DIRECTIONS = Object.freeze(['written-to-sounding', 'sounding-to-written']);
+
+const STAFF_BOTTOM = { bass: 18, alto: 24, treble: 30, tenor: 22 };
+const ENTRY_LETTERS = 'cdefgab';
+const ENTRY_NATURALS = [0, 2, 4, 5, 7, 9, 11];
+
+/** Absolute staff step: C0 = 0, C4 = 28. Accidentals are signed semitones. */
+export function parseEntryKey(key) {
+  const match = typeof key === 'string' && /^([a-g])(bb|##|b|#)?\/(-?\d+)$/.exec(key);
+  if (!match) return null;
+  const [, letter, suffix = '', octave] = match;
+  const step = Number(octave) * 7 + ENTRY_LETTERS.indexOf(letter);
+  const accidental = suffix.startsWith('b') ? -suffix.length : suffix.length;
+  return entryPitch(step, accidental) ? { step, accidental } : null;
+}
+
+export function entryPitch(step, accidental = 0) {
+  if (!Number.isInteger(step) || !Number.isInteger(accidental) || Math.abs(accidental) > 2) return null;
+  const octave = Math.floor(step / 7);
+  const letter = ((step % 7) + 7) % 7;
+  const midi = (octave + 1) * 12 + ENTRY_NATURALS[letter] + accidental;
+  if (midi < 0 || midi > 127) return null;
+  const suffix = accidental < 0 ? 'b'.repeat(-accidental) : '#'.repeat(accidental);
+  return { midi, key: `${ENTRY_LETTERS[letter]}${suffix}/${octave}` };
+}
+
+export function entryStaffBounds(clef) {
+  const bottom = STAFF_BOTTOM[clef] ?? STAFF_BOTTOM.treble;
+  return { minStep: bottom - 8, maxStep: bottom + 16 };
+}
+
+export function formatEntryKey(key, language = 'de') {
+  const [name, octave] = key.split('/');
+  const [letter, ...suffix] = name;
+  const base = language === 'de' && letter === 'b' && suffix[0] !== 'b' ? 'H' : letter.toUpperCase();
+  const symbol = suffix.join('').replaceAll('b', '♭').replaceAll('#', '♯');
+  return `${base}${symbol}${octave}`;
+}
+
+export function gradeEntryAnswer(question, answer) {
+  const pitch = entryPitch(answer?.step, answer?.accidental);
+  if (!pitch || pitch.midi !== question.expected.midi) return 'incorrect';
+  return pitch.key === question.expected.key ? 'correct' : 'enharmonic';
+}
+
+// Choose fixed clefs before generating any pitches, so the answer staff
+// does not offer an unintended cue about the octave of the required note.
+function entrySoundingClef(instrument) {
+  return instrument.clef === 'treble' && instrument.transpose <= -12 ? 'bass' : instrument.clef;
+}
+
+function isCommonEntrySpelling({ key, accidental }) {
+  return Math.abs(accidental) <= 1 && !/^(cb|fb|b#|e#)\//.test(key);
+}
+
+const entryPools = new Map();
+function entryPairs(instrument) {
+  if (entryPools.has(instrument.id)) return entryPools.get(instrument.id);
+  const writtenClef = instrument.clef;
+  const soundingClef = entrySoundingClef(instrument);
+  const writtenStaff = STAFF_BOTTOM[writtenClef] ?? STAFF_BOTTOM.treble;
+  const soundingStaff = STAFF_BOTTOM[soundingClef] ?? STAFF_BOTTOM.treble;
+  const [low, high] = instrument.writtenRange;
+  const pairs = [];
+  // Stay within three ledger lines of either staff. This includes the
+  // double-octave glockenspiel, whose low written and high concert ranges
+  // leave a smaller overlap than on the other instrument models.
+  for (let step = writtenStaff - 6; step <= writtenStaff + 14; step++) {
+    for (const accidental of [0, -1, 1]) {
+      const written = entryPitch(step, accidental);
+      if (!written || written.midi < low || written.midi > high || !isCommonEntrySpelling({ ...written, accidental })) continue;
+      const midi = written.midi + instrument.transpose;
+      if (midi < 0 || midi > 127) continue;
+      const key = transposeKey(written.key, midi, instrument.transpose);
+      const sounding = parseEntryKey(key);
+      if (!sounding || !isCommonEntrySpelling({ key, accidental: sounding.accidental }) ||
+          sounding.step < soundingStaff - 6 || sounding.step > soundingStaff + 14) continue;
+      pairs.push({ written: { ...written, clef: writtenClef }, sounding: { midi, key, clef: soundingClef } });
+    }
+  }
+  entryPools.set(instrument.id, pairs);
+  return pairs;
+}
+
+/** A constructive drill, separate from the correct/incorrect detector. */
+export function generateEntryQuestion({ instrumentIds, direction, rng = Math.random, recentSignatures = [] } = {}) {
+  if (!ENTRY_DIRECTIONS.includes(direction)) throw new RangeError('Unknown transposition direction.');
+  const instruments = INSTRUMENTS.filter(instrument => instrument.pitched && Number.isInteger(instrument.transpose) &&
+    (instrumentIds === undefined || instrumentIds.includes(instrument.id)));
+  const writtenToSounding = direction === 'written-to-sounding';
+  const recent = new Map(recentSignatures.map((signature, index) => [signature, index]));
+  const rows = instruments.map(instrument => entryPairs(instrument).map(({ written, sounding }) => {
+    const given = writtenToSounding ? written : sounding;
+    const expected = writtenToSounding ? sounding : written;
+    const signature = `${direction}:${instrument.id}:${given.key}`;
+    return { instrument, written, sounding, given, expected, signature };
+  })).filter(row => row.length);
+  if (!rows.length) throw new RangeError('No selected instrument supports this exercise.');
+  const fresh = rows.map(row => row.filter(({ signature }) => !recent.has(signature))).filter(row => row.length);
+  // Weight instrument models equally, even when their ranges differ.
+  const candidate = fresh.length ? pick(pick(fresh, rng), rng) :
+    rows.flat().reduce((oldest, next) => recent.get(next.signature) < recent.get(oldest.signature) ? next : oldest);
+  const { instrument, written, sounding, given, expected, signature } = candidate;
+  const shift = instrument.transpose;
+  const [, deInterval, enInterval] = transpositionIntervals[shift] ??
+    [0, `${Math.abs(shift)} Halbtöne`, `${Math.abs(shift)} semitones`];
+  const explanation = Object.freeze({
+    de: `Notiert ${formatEntryKey(written.key, 'de')} klingt als ${formatEntryKey(sounding.key, 'de')}${shift ? ` (${deInterval} ${shift < 0 ? 'tiefer' : 'höher'})` : ' (klingt wie notiert)'}.`,
+    en: `Written ${formatEntryKey(written.key, 'en')} sounds as ${formatEntryKey(sounding.key, 'en')}${shift ? ` (${enInterval} ${shift < 0 ? 'lower' : 'higher'})` : ' (sounds as written)'}.`,
+  });
+  const id = `entry-${hash(signature).toString(36)}${fresh.length ? '' : `-repeat-${(rng() * 2 ** 32 >>> 0).toString(36)}`}`;
+  return Object.freeze({ id, signature, instrumentId: instrument.id, direction,
+    given: Object.freeze({ ...given }), expected: Object.freeze({ ...expected }), explanation });
 }

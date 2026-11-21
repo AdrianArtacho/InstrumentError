@@ -31,6 +31,12 @@ Keyboard: **K** = correct, **F** = incorrect, **Enter** = resolve / next. Answer
 
 Browser storage is device/browser specific; clearing site data removes saved progress. Private browsing or storage restrictions may prevent saving; the quiz displays a notice and remains usable for the current visit. Recent detail is bounded to 250 questions in the active session and 20 archived session summaries, while lifetime counters are retained. Export is a local backup/report, not an account sync or import feature.
 
+## Enter the transposed note
+
+Open Settings → **Transposition: Note eingeben** or follow the link on a transposition question. Choose [written → sounding](https://adrianartacho.github.io/InstrumentError/note-entry.html?direction=written-to-sounding) or [sounding → written](https://adrianartacho.github.io/InstrumentError/note-entry.html?direction=sounding-to-written). The given pitch stays on the left, and the answer staff starts empty. Click or tap a line or space, or focus the staff and use ↑/↓. Choose ♭, ♮ or ♯ as needed, then check the note. The feedback distinguishes an enharmonic spelling from a different pitch or octave.
+
+For a shareable drill, add `instruments` with the usual comma-separated instrument or family IDs. Links from Settings carry your selected instruments.
+
 ## Share a practice selection
 
 Open Settings, choose instruments and error types, and copy the exercise link shown there. The link reflects the current selection in the dialog, even before you apply it.

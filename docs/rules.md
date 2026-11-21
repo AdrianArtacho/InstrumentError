@@ -46,6 +46,12 @@ The four mallet models provide the first percussion category. Unpitched percussi
 
 A curve between different pitches is deliberately not classified as an erroneous tie: a student could reasonably read it as a slur. Likewise, difficult but possible double stops, awkward leaps, dynamics, breathing, rapid changes of instrument and subjective balance problems are not silently labelled impossible.
 
+## Transposition note entry
+
+The two staff drills ask for the sounding note from the written note, or the written note from the sounding note. They use the same instrument models as the transposition check, including instruments that sound as written. Each prompt is a single note in range and uses a fixed clef on each side for that instrument. Examples stay within three ledger lines on both staves and use natural notes, flats, and sharps.
+
+The expected answer preserves the spelled interval and its octave. For example, written C4 for a B♭ clarinet sounds as B♭3: A♯3 has the right sound but spells the interval differently, and B♭4 is in the wrong octave. Practice feedback distinguishes these cases. The drills run independently of the correct/incorrect rule.
+
 ## Sources
 
 Primary reference pages, checked 17 November 2026. The factual range/notation data are paraphrased; the exact practice-window choices and quiz rule applications are editorial decisions for this app.

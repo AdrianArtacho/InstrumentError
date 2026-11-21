@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173f43">
+  <title>InstrumentError · Transposition</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css?v=1.4.0">
+  <link rel="stylesheet" href="./note-entry.css?v=1.5.0">
+</head>
+<body class="entry-page">
+  <main class="entry-main">
+    <header class="entry-header">
+      <nav class="entry-navigation" aria-label="InstrumentError">
+        <a id="back-to-quiz" href="./index.html" data-copy="back">← Fehler erkennen</a>
+        <button id="entry-language" class="language-button" type="button" aria-label="Switch to English">EN</button>
+      </nav>
+      <div class="entry-mode-row">
+        <p class="section-label" data-copy="eyebrow">TRANSPOSITION · NOTE EINGEBEN</p>
+        <nav class="entry-directions" id="entry-directions" aria-label="Übungsrichtung">
+          <a id="entry-forward" href="?direction=written-to-sounding" data-copy="forward">Notiert → Klingend</a>
+          <a id="entry-reverse" href="?direction=sounding-to-written" data-copy="reverse">Klingend → Notiert</a>
+        </nav>
+      </div>
+      <div class="entry-title-row">
+        <div>
+          <h1 id="entry-instrument">…</h1>
+          <p id="entry-instruction"></p>
+        </div>
+        <p id="entry-stats" class="entry-stats"></p>
+      </div>
+    </header>
+    <div class="entry-staves">
+      <section class="entry-card" aria-labelledby="given-label">
+        <header class="entry-card-title">
+          <div><p class="section-label" data-copy="given">VORGABE</p><h2 id="given-label"></h2></div>
+          <span class="clef-badge" id="given-clef"></span>
+        </header>
+        <div id="entry-given-score" class="entry-given-score"></div>
+      </section>
+      <section class="entry-card entry-answer-card" aria-labelledby="answer-label">
+        <header class="entry-card-title">
+          <div><p class="section-label" id="entry-answer-kicker" data-copy="answer">DEINE EINGABE</p><h2 id="answer-label"></h2></div>
+          <span class="clef-badge" id="answer-clef"></span>
+        </header>
+        <div id="entry-answer-score" class="entry-answer-score"></div>
+        <div class="entry-accidental-row">
+          <div id="entry-accidentals" class="entry-accidentals" role="group" aria-label="Vorzeichen">
+            <button type="button" data-accidental="-1" aria-label="Be" aria-pressed="false">♭</button>
+            <button type="button" data-accidental="0" aria-label="Natürlich" aria-pressed="true">♮</button>
+            <button type="button" data-accidental="1" aria-label="Kreuz" aria-pressed="false">♯</button>
+          </div>
+          <span id="entry-note-name" class="entry-note-name" aria-live="polite">—</span>
+        </div>
+      </section>
+    </div>
+    <p id="entry-staff-help" class="entry-staff-help" data-copy="help">Klicke auf eine Linie oder einen Zwischenraum. Mit ↑ und ↓ verschiebst du die Note. Wähle bei Bedarf ein Vorzeichen.</p>
+    <div class="entry-footer">
+      <div id="entry-feedback" class="entry-feedback" role="status"></div>
+      <div id="entry-actions" class="entry-actions">
+        <button type="button" id="entry-solution" class="secondary-button" hidden></button>
+        <button type="button" id="entry-check" class="primary-button" data-copy="check" disabled>Prüfen</button>
+        <button type="button" id="entry-next" class="primary-button" data-copy="next" hidden>Weiter</button>
+      </div>
+    </div>
+  </main>
+  <script src="./vendor/vexflow.js"></script>
+  <script type="module" src="./src/note-entry-app.js?v=1.5.0"></script>
+</body>
+</html>

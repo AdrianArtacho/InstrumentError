@@ -9,8 +9,8 @@ export function pitchKey(midi) {
   return `${MIDI_SPELLINGS[mod(midi, 12)]}/${Math.floor(midi / 12) - 1}`;
 }
 
-function transposeKey(key, midi, shift) {
-  const steps = LETTER_SHIFTS[shift];
+export function transposeKey(key, midi, shift) {
+  const steps = shift === 0 ? 0 : LETTER_SHIFTS[shift];
   if (steps === undefined) return pitchKey(midi);
   const [written, writtenOctave] = key.split('/');
   const diatonic = Number(writtenOctave) * 7 + LETTERS.indexOf(written[0]) + steps;
