@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#173f43">
   <title>InstrumentError · Transposition</title>
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=1.4.0">
-  <link rel="stylesheet" href="./note-entry.css?v=1.5.0">
+  <link rel="stylesheet" href="./styles.css?v=1.6.0">
+  <link rel="stylesheet" href="./note-entry.css?v=1.6.0">
 </head>
 <body class="entry-page">
   <main class="entry-main">
@@ -21,6 +21,7 @@
         <nav class="entry-directions" id="entry-directions" aria-label="Übungsrichtung">
           <a id="entry-forward" href="?direction=written-to-sounding" data-copy="forward">Notiert → Klingend</a>
           <a id="entry-reverse" href="?direction=sounding-to-written" data-copy="reverse">Klingend → Notiert</a>
+          <a id="entry-interval" href="./interval-practice.html" data-copy="interval">Intervall wählen</a>
         </nav>
       </div>
       <div class="entry-title-row">
@@ -55,7 +56,7 @@
         </div>
       </section>
     </div>
-    <p id="entry-staff-help" class="entry-staff-help" data-copy="help">Klicke auf eine Linie oder einen Zwischenraum. Mit ↑ und ↓ verschiebst du die Note. Wähle bei Bedarf ein Vorzeichen.</p>
+    <p id="entry-staff-help" class="entry-staff-help" data-copy="help">Klicke auf eine Linie oder einen Zwischenraum. ↑ und ↓ verschieben die Note; ← und → wählen das Vorzeichen.</p>
     <div class="entry-footer">
       <div id="entry-feedback" class="entry-feedback" role="status"></div>
       <div id="entry-actions" class="entry-actions">
@@ -66,6 +67,6 @@
     </div>
   </main>
   <script src="./vendor/vexflow.js"></script>
-  <script type="module" src="./src/note-entry-app.js?v=1.5.0"></script>
+  <script type="module" src="./src/note-entry-app.js?v=1.6.0"></script>
 </body>
 </html>

@@ -26,8 +26,8 @@ function staffStepAtPoint(rect, clientX, clientY, bottomY, stepHeight, bottomSte
 }
 
 /**
- * Mount the response staff. All pitch changes go through onStep; the caller
- * owns the entry and updates it with {step, accidental, valueText, locked, tone}.
+ * Mount the response staff. The caller owns the entry, handles onStep and
+ * onAccidental, and updates {step, accidental, valueText, locked, tone}.
  * Passing step:null keeps the staff blank. Up/Down first places a middle-line
  * note and then moves it by one staff step. Mount after the exercise is visible.
  */
@@ -52,6 +52,8 @@ export async function mountEntryStaff(container, options) {
     host.setAttribute('aria-orientation', 'vertical');
     host.setAttribute('aria-valuemin', minStep);
     host.setAttribute('aria-valuemax', maxStep);
+    host.setAttribute('aria-keyshortcuts', options.onAccidental
+      ? 'ArrowUp ArrowDown ArrowLeft ArrowRight' : 'ArrowUp ArrowDown');
     if (options.describedBy) host.setAttribute('aria-describedby', options.describedBy);
     host.tabIndex = 0;
   }
@@ -163,9 +165,17 @@ export async function mountEntryStaff(container, options) {
   });
   host.addEventListener('pointerleave', clearGhost);
   host.addEventListener('keydown', e => {
-    if (state.readOnly || state.locked || e.altKey || e.ctrlKey || e.metaKey || !['ArrowUp', 'ArrowDown'].includes(e.key)) return;
+    if (state.readOnly || state.locked || e.altKey || e.ctrlKey || e.metaKey) return;
+    const vertical = e.key === 'ArrowUp' || e.key === 'ArrowDown';
+    const horizontal = state.onAccidental && (e.key === 'ArrowLeft' || e.key === 'ArrowRight');
+    if (!vertical && !horizontal) return;
     e.preventDefault();
     e.stopPropagation();
+    if (horizontal) {
+      const accidental = state.accidental + (e.key === 'ArrowRight' ? 1 : -1);
+      state.onAccidental(Math.min(1, Math.max(-1, accidental)));
+      return;
+    }
     const direction = e.key === 'ArrowUp' ? 1 : -1;
     const step = state.step == null ? middleStep : state.step + direction;
     state.onStep(Math.min(maxStep, Math.max(minStep, step)));

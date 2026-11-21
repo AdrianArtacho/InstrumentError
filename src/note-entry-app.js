@@ -1,14 +1,14 @@
 import { generateEntryQuestion, entryPitch, parseEntryKey, formatEntryKey, gradeEntryAnswer } from './engine.js?v=1.5.0';
 import { INSTRUMENTS, FAMILIES, getInstrument } from './instruments.js';
-import { mountEntryStaff } from './entry-staff.js?v=1.5.0';
+import { mountEntryStaff } from './entry-staff.js?v=1.6.0';
 import { loadState } from './session.js?v=1.3.0';
 
 const COPY = {
   de: {
-    back: '← Fehler erkennen', eyebrow: 'TRANSPOSITION · NOTE EINGEBEN', forward: 'Notiert → Klingend', reverse: 'Klingend → Notiert',
+    back: '← Fehler erkennen', eyebrow: 'TRANSPOSITION · NOTE EINGEBEN', forward: 'Notiert → Klingend', reverse: 'Klingend → Notiert', interval: 'Intervall wählen',
     directions: 'Übungsrichtung', given: 'VORGABE', answer: 'DEINE EINGABE', solution: 'LÖSUNG',
     written: 'Notierte Note', sounding: 'Klingende Note', writtenPrompt: 'Wie klingt diese notierte Note?', soundingPrompt: 'Wie wird diese klingende Note für das Instrument notiert?',
-    help: 'Klicke oder tippe auf eine Linie oder einen Zwischenraum. Mit ↑ und ↓ verschiebst du die Note. Wähle bei Bedarf ein Vorzeichen.',
+    help: 'Klicke oder tippe auf das Notensystem. Mit ↑ und ↓ setzt und verschiebst du die Note, mit ← und → wählst du das Vorzeichen.',
     start: 'Setze die gesuchte Note ins Antwortsystem.', check: 'Prüfen', next: 'Weiter', showSolution: 'Lösung zeigen', showAnswer: 'Meine Note zeigen',
     good: 'Richtig.', almost: 'Richtige Tonhöhe, andere Schreibweise.', wrong: 'Noch nicht richtig.', expected: 'Gesucht:', entered: 'Deine Note:',
     accidentals: 'Vorzeichen', accidentalNames: ['Be', 'Auflösungszeichen', 'Kreuz'], clefs: { treble: 'Violinschlüssel', bass: 'Bassschlüssel', alto: 'Altschlüssel', tenor: 'Tenorschlüssel' },
@@ -16,10 +16,10 @@ const COPY = {
     noInstrument: 'Keine passenden Instrumente im Link. Es werden alle Instrumente verwendet.',
   },
   en: {
-    back: '← Spot errors', eyebrow: 'TRANSPOSITION · ENTER A NOTE', forward: 'Written → Sounding', reverse: 'Sounding → Written',
+    back: '← Spot errors', eyebrow: 'TRANSPOSITION · ENTER A NOTE', forward: 'Written → Sounding', reverse: 'Sounding → Written', interval: 'Choose the interval',
     directions: 'Exercise direction', given: 'GIVEN', answer: 'YOUR ENTRY', solution: 'SOLUTION',
     written: 'Written note', sounding: 'Sounding note', writtenPrompt: 'How does this written note sound?', soundingPrompt: 'How is this sounding note written for this instrument?',
-    help: 'Click or tap a line or space. Move the note with ↑ and ↓. Choose an accidental if needed.',
+    help: 'Click or tap the staff. Use ↑ and ↓ to place and move the note, and ← and → to choose the accidental.',
     start: 'Place the requested note on the answer staff.', check: 'Check', next: 'Next', showSolution: 'Show solution', showAnswer: 'Show my note',
     good: 'Correct.', almost: 'Right pitch, different spelling.', wrong: 'Not quite.', expected: 'Expected:', entered: 'Your note:',
     accidentals: 'Accidentals', accidentalNames: ['Flat', 'Natural', 'Sharp'], clefs: { treble: 'Treble clef', bass: 'Bass clef', alto: 'Alto clef', tenor: 'Tenor clef' },
@@ -64,6 +64,14 @@ function updateLinks() {
     if (dir === direction) $(id).setAttribute('aria-current', 'page');
     else $(id).removeAttribute('aria-current');
   }
+  const intervalLink = $('entry-interval');
+  if (intervalLink) {
+    const interval = new URL('./interval-practice.html', location.href);
+    interval.searchParams.set('lang', lang);
+    if (params.has('instruments')) interval.searchParams.set('instruments', tokens.join(','));
+    if (params.has('errors')) interval.searchParams.set('errors', params.get('errors'));
+    intervalLink.href = interval.href;
+  }
   const back = new URL('./index.html', location.href);
   if (selected.length) back.searchParams.set('instruments', tokens.join(','));
   if (params.has('errors')) back.searchParams.set('errors', params.get('errors'));
@@ -92,7 +100,8 @@ function update() {
   staff?.update({
     ...shown, locked: loading || !!result, tone: showSolution || result === 'correct' ? 'correct' : result ? 'incorrect' : 'normal',
     label: `${copy.staff} · ${$('answer-label').textContent} · ${$('answer-clef').textContent}`,
-    valueText: pitch ? namedKey(pitch.key) : copy.emptyStaff,
+    valueText: pitch ? namedKey(pitch.key) : shown.accidental
+      ? `${copy.emptyStaff} · ${copy.accidentalNames[shown.accidental + 1]}` : copy.emptyStaff,
   });
   $('entry-note-name').textContent = pitch ? namedKey(pitch.key) : '—';
   $('entry-accidentals').querySelectorAll('button').forEach((button, i) => {
@@ -143,7 +152,7 @@ async function nextQuestion(focus = true) {
       mountEntryStaff($('entry-given-score'), { clef: question.given.clef, ...parseEntryKey(question.given.key), readOnly: true }),
       mountEntryStaff($('entry-answer-score'), {
         clef: question.expected.clef, label: c().staff, describedBy: 'entry-staff-help',
-        step, accidental, locked: true,
+        step, accidental, locked: true, onAccidental: setAccidental,
         onStep(value) { if (!loading && !result) { step = value; update(); } },
       }),
     ]);
@@ -167,11 +176,16 @@ function checkAnswer() {
   $('entry-next').focus({ preventScroll: true });
 }
 
+function setAccidental(value) {
+  if (loading || failed || result || ![-1, 0, 1].includes(value) || accidental === value) return;
+  accidental = value;
+  update();
+}
+
 $('entry-accidentals').addEventListener('click', event => {
   const button = event.target.closest('[data-accidental]');
-  if (loading || result || !button) return;
-  accidental = Number(button.dataset.accidental);
-  update();
+  if (loading || failed || result || !button) return;
+  setAccidental(Number(button.dataset.accidental));
   staff?.focus();
 });
 $('entry-check').addEventListener('click', checkAnswer);

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173f43">
+  <title>InstrumentError · Transpositionsintervalle</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css?v=1.6.0">
+  <link rel="stylesheet" href="./note-entry.css?v=1.6.0">
+  <link rel="stylesheet" href="./interval-practice.css?v=1.6.0">
+</head>
+<body class="entry-page">
+  <main class="entry-main interval-main">
+    <header class="entry-header">
+      <nav class="entry-navigation" aria-label="InstrumentError">
+        <a id="interval-back" href="./index.html" data-copy="back">← Fehler erkennen</a>
+        <button id="interval-language" class="language-button" type="button" aria-label="Switch to English">EN</button>
+      </nav>
+      <div class="entry-mode-row">
+        <h1 class="section-label" data-copy="title">TRANSPOSITION · INTERVALL WÄHLEN</h1>
+        <nav class="entry-directions" id="interval-modes" aria-label="Transpositionsübungen">
+          <a id="interval-forward" href="./note-entry.html?direction=written-to-sounding" data-copy="forward">Notiert → Klingend</a>
+          <a id="interval-reverse" href="./note-entry.html?direction=sounding-to-written" data-copy="reverse">Klingend → Notiert</a>
+          <a id="interval-current" aria-current="page" href="./interval-practice.html" data-copy="current">Intervall wählen</a>
+        </nav>
+      </div>
+    </header>
+    <div class="interval-grid">
+      <section class="entry-card interval-instrument-card" aria-labelledby="interval-instrument">
+        <div>
+          <p class="section-label" data-copy="instrument">INSTRUMENT</p>
+          <h2 id="interval-instrument">…</h2>
+          <p id="interval-family" class="interval-family"></p>
+        </div>
+        <p class="interval-reference" data-copy="reference">Von der notierten Note zum klingenden Ton</p>
+      </section>
+      <section class="entry-card interval-options-card" aria-labelledby="interval-prompt">
+        <div class="entry-card-title">
+          <p class="section-label" data-copy="options">ANTWORTMÖGLICHKEITEN</p>
+          <p id="interval-stats" class="entry-stats"></p>
+        </div>
+        <h2 id="interval-prompt" data-copy="prompt">Wie klingt das Instrument im Vergleich zur Notation?</h2>
+        <div id="interval-options" class="interval-options" role="radiogroup" aria-labelledby="interval-prompt" aria-describedby="interval-help"></div>
+      </section>
+    </div>
+    <p id="interval-help" class="entry-staff-help" data-copy="help">Mit ↑ und ↓ wählen, mit Enter prüfen und weitergehen. Du kannst die Antwort auch anklicken.</p>
+    <div class="entry-footer">
+      <p id="interval-feedback" class="entry-feedback" role="status"></p>
+      <div class="entry-actions">
+        <button type="button" id="interval-check" class="primary-button" disabled><span data-copy="check">Prüfen</span><kbd>↵</kbd></button>
+        <button type="button" id="interval-next" class="primary-button" hidden><span data-copy="next">Weiter</span><kbd>↵</kbd></button>
+      </div>
+    </div>
+  </main>
+  <noscript><p class="noscript">Please enable JavaScript to use InstrumentError.</p></noscript>
+  <script type="module" src="./src/interval-app.js?v=1.6.0"></script>
+</body>
+</html>

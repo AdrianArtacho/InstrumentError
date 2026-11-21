@@ -33,9 +33,15 @@ Browser storage is device/browser specific; clearing site data removes saved pro
 
 ## Enter the transposed note
 
-Open Settings → **Transposition: Note eingeben** or follow the link on a transposition question. Choose [written → sounding](https://adrianartacho.github.io/InstrumentError/note-entry.html?direction=written-to-sounding) or [sounding → written](https://adrianartacho.github.io/InstrumentError/note-entry.html?direction=sounding-to-written). The given pitch stays on the left, and the answer staff starts empty. Click or tap a line or space, or focus the staff and use ↑/↓. Choose ♭, ♮ or ♯ as needed, then check the note. The feedback distinguishes an enharmonic spelling from a different pitch or octave.
+Open Settings → **Transposition practice** or follow the link on a transposition question. Choose [written → sounding](https://adrianartacho.github.io/InstrumentError/note-entry.html?direction=written-to-sounding) or [sounding → written](https://adrianartacho.github.io/InstrumentError/note-entry.html?direction=sounding-to-written). The given pitch stays on the left, and the answer staff starts empty. Click or tap a line or space, or focus the staff and use ↑/↓ to move the note and ←/→ to choose ♭, ♮ or ♯. Press Enter to check. The feedback distinguishes an enharmonic spelling from a different pitch or octave.
 
 For a shareable drill, add `instruments` with the usual comma-separated instrument or family IDs. Links from Settings carry your selected instruments.
+
+## Choose the transposition interval
+
+In [Choose the interval](https://adrianartacho.github.io/InstrumentError/interval-practice.html), read the instrument on the left and choose how it sounds relative to the written note. Use ↑/↓ or click an answer; Enter checks it and moves to the next question. For Horn in F, the choices contrast a perfect fifth down with related directions and registers, including a perfect fourth up. Feedback gives a concrete written-to-sounding note pair.
+
+Mixed practice favors transposing instruments. The same instrument and family filters are available, for example [woodwinds](https://adrianartacho.github.io/InstrumentError/interval-practice.html?instruments=woodwinds) or [Horn in F and B♭ clarinet](https://adrianartacho.github.io/InstrumentError/interval-practice.html?instruments=horn-f,clarinet-bb).
 
 ## Share a practice selection
 

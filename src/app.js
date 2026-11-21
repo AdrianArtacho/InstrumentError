@@ -5,7 +5,7 @@ import { FAMILIES, INSTRUMENTS, getInstrument, noteName } from './instruments.js
 import { RULES, getRule, generateQuestion, getEligibleInstruments, validateQuestion } from './engine.js?v=1.3.0';
 import { loadState, defaultState, saveState, selectAnswer, resolveAnswer, setQuestion, newSession, aggregateStats } from './session.js?v=1.3.0';
 import { renderScore } from './notation.js?v=1.4.1';
-import { TEXT } from './i18n.js?v=1.5.0';
+import { TEXT } from './i18n.js?v=1.6.0';
 
 const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -72,8 +72,8 @@ function translatePage() {
   updateStorageNotice();
 }
 function entryPracticeUrl(direction, instrumentIds) {
-  const url = new URL('./note-entry.html', location.href);
-  url.searchParams.set('direction', direction);
+  const url = new URL(direction ? './note-entry.html' : './interval-practice.html', location.href);
+  if (direction) url.searchParams.set('direction', direction);
   url.searchParams.set('lang', lang());
   if (instrumentIds.length) url.searchParams.set('instruments', instrumentIds.join(','));
   if (params.has('errors')) url.searchParams.set('errors', state.config.ruleIds.join(','));
@@ -120,6 +120,7 @@ function renderFilters() {
   }
   $('entry-forward-link').href = entryPracticeUrl('written-to-sounding', draft.instrumentIds);
   $('entry-reverse-link').href = entryPracticeUrl('sounding-to-written', draft.instrumentIds);
+  $('entry-interval-link').href = entryPracticeUrl(null, draft.instrumentIds);
   $('selected-count').textContent=draft.instrumentIds.length;
   const eligible=getEligibleInstruments(draft);
   $('filter-note').textContent=eligible.length?`${eligible.length} ${t('validSelection')}${eligible.length<draft.instrumentIds.length?' '+t('noApplicable'):''}`:t('noSelection');
@@ -205,6 +206,8 @@ async function drawQuestion() {
     : (correctedNotation ? 'writtenCorrected' : 'writtenPitch'));
   $('entry-current-link').hidden = !Number.isInteger(question.soundingPitch);
   $('entry-current-link').href = entryPracticeUrl('written-to-sounding', state.config.instrumentIds);
+  $('interval-current-link').hidden = $('entry-current-link').hidden;
+  $('interval-current-link').href = entryPracticeUrl(null, state.config.instrumentIds);
   $('score').setAttribute('aria-busy','true');
   const concert = updateConcertPitch(question,phase);
   updateAnswerControls();

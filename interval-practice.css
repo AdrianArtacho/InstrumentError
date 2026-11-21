@@ -1,0 +1,66 @@
+.interval-main { max-width: 1160px; grid-template-rows: auto minmax(min-content, 1fr) auto auto; }
+.interval-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
+  gap: 12px;
+}
+.interval-instrument-card {
+  justify-content: center;
+  align-items: flex-start;
+  gap: clamp(16px, 4vh, 38px);
+  padding-inline: clamp(16px, 4vw, 54px);
+}
+.interval-instrument-card h2 {
+  font-size: clamp(28px, 4vw, 50px);
+  overflow-wrap: anywhere;
+  margin-block: 9px 8px;
+}
+.interval-family { color: var(--muted); }
+.interval-reference {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  color: var(--teal);
+  font-size: .92rem;
+}
+.interval-options-card {
+  justify-content: center;
+  padding: clamp(14px, 3vw, 36px);
+}
+.interval-options-card h2 { margin-block: 10px 16px; }
+.interval-options { display: grid; gap: 7px; }
+.interval-option {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  column-gap: 11px;
+  min-height: 47px;
+  padding: 9px 12px;
+  border: 1px solid #c7d4c9;
+  border-radius: 8px;
+  background: var(--paper);
+  cursor: pointer;
+}
+.interval-option:has(:enabled):hover { background: #eef3eb; }
+.interval-option:has(:focus-visible) { outline: 3px solid var(--accent); outline-offset: 1px; }
+.interval-option:has(:checked) { border-color: var(--teal); background: #e9f1e8; }
+.interval-option:has(:disabled) { cursor: default; }
+.interval-option[data-result="correct"] { border-color: #78a88a; background: #e7f0e4; }
+.interval-option[data-result="incorrect"] { border-color: #c38d79; background: #faf0e4; }
+.interval-option input {
+  accent-color: var(--teal);
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+}
+.interval-option-mark { font: 700 .78rem var(--sans); color: var(--teal); }
+.interval-option[data-result="incorrect"] .interval-option-mark { color: #814834; }
+@media (max-width: 630px) {
+  .interval-main { grid-template-rows: auto auto auto auto; gap: 8px; }
+  .interval-grid { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .interval-instrument-card { gap: 9px; }
+  .interval-instrument-card h2 { margin-block: 4px 3px; }
+  .interval-reference { padding-top: 6px; }
+  .interval-options-card h2 { margin-block: 7px 9px; }
+  .interval-option { min-height: 44px; }
+}
