@@ -199,6 +199,16 @@ export async function renderScore(container, question, options = {}) {
   // Fit extreme pitches from their engraved staff coordinates instead, keeping
   // ordinary snippets compact while reserving space for stems, marks and text.
   const noteYs = notes.flatMap(note => note.getYs()).filter(Number.isFinite);
+  // The reference card displays only a bare note, with no articulations or
+  // dynamics. Crop its spare canvas so the clef and pitch use the card space.
+  if (miniature) {
+    const stemYs = notes.flatMap(note => Object.values(note.getStemExtents())).filter(Number.isFinite);
+    const top = Math.min(stave.getYForLine(0) - 20, ...noteYs.map(y => y - 12), ...stemYs.map(y => y - 10));
+    const bottom = Math.max(stave.getBottomLineY() + 20, ...noteYs.map(y => y + 12), ...stemYs.map(y => y + 10));
+    const left = (width - staveWidth) / 2 - 12;
+    svg.setAttribute('viewBox', `${left} ${top} ${width - 2 * left} ${bottom - top}`);
+    return svg;
+  }
   const top = Math.min(0, ...noteYs.map(y => y - 75));
   const bottom = Math.max(height, stave.getBottomLineY() + 80, ...noteYs.map(y => y + 80));
   svg.setAttribute('viewBox', `0 ${top} ${width} ${bottom - top}`);

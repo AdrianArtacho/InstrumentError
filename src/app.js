@@ -4,7 +4,7 @@ import { readExerciseLink, makeExerciseLink } from './exercise-link.js?v=1.3.0';
 import { FAMILIES, INSTRUMENTS, getInstrument, noteName } from './instruments.js';
 import { RULES, getRule, generateQuestion, getEligibleInstruments, validateQuestion } from './engine.js?v=1.3.0';
 import { loadState, defaultState, saveState, selectAnswer, resolveAnswer, setQuestion, newSession, aggregateStats } from './session.js?v=1.3.0';
-import { renderScore } from './notation.js?v=1.4.0';
+import { renderScore } from './notation.js?v=1.4.1';
 import { TEXT } from './i18n.js?v=1.4.0';
 
 const $ = id => document.getElementById(id);
