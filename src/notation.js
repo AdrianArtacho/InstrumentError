@@ -1,10 +1,11 @@
+import { pitchKey } from './pitch-view.js?v=1.4.0';
+
 /** Self-contained SVG music engraving. VexFlow is loaded by vendor/vexflow.js. */
 const renderTokens = new WeakMap();
 let fontsReady;
 const INK = '#172f35';
 const ERROR = '#b33f34';
 const CORRECTION = '#26735d';
-const PITCHES = ['c', 'c#', 'd', 'eb', 'e', 'f', 'f#', 'g', 'ab', 'a', 'bb', 'b'];
 
 function vexflow() {
   const vf = window.VexFlow;
@@ -24,15 +25,16 @@ async function prepareFonts() {
   return fontsReady;
 }
 
-function pitchKey(midi) {
-  const pitch = PITCHES[((midi % 12) + 12) % 12];
-  return `${pitch}/${Math.floor(midi / 12) - 1}`;
+function noteKeys(note) {
+  return note.pitches.map((midi, index) => note.pitchKeys?.[index] ?? pitchKey(midi));
 }
 
-function pitchName(midi, language = 'de') {
-  const names = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
-  const name = names[((midi % 12) + 12) % 12];
-  return `${name}${Math.floor(midi / 12) - 1}${language === 'de' && midi % 12 === 11 ? ' (H)' : ''}`;
+function pitchName(key, language = 'de') {
+  const [pitch, octave] = key.split('/');
+  const [letter, ...accidentals] = pitch.toUpperCase();
+  const accidental = accidentals.join('').replaceAll('B', '♭').replaceAll('#', '♯');
+  const germanB = language === 'de' && letter === 'B' && !accidental;
+  return `${letter}${accidental}${octave}${germanB ? ' (H)' : ''}`;
 }
 
 function correctedQuestion(question, corrected) {
@@ -48,7 +50,7 @@ export function notationDescription(question, language = 'de', corrected = false
     : { treble: 'treble clef', bass: 'bass clef', alto: 'alto clef', tenor: 'tenor clef', percussion: 'percussion clef' };
   const notes = (q.notes || []).map((note, i) => {
     const duration = note.duration === 'h' ? (de ? 'halbe Note' : 'half note') : (de ? 'Viertelnote' : 'quarter note');
-    const pitches = note.pitches.map(p => pitchName(p, language)).join(de ? ' und ' : ' and ');
+    const pitches = noteKeys(note).map(key => pitchName(key, language)).join(de ? ' und ' : ' and ');
     const chord = note.pitches.length > 1 ? (de ? 'Akkord ' : 'chord ') : '';
     const articulation = note.articulation === 'accent' ? (de ? ', Akzent' : ', accent')
       : note.articulation === 'staccato' ? ', staccato' : '';
@@ -112,16 +114,17 @@ export async function renderScore(container, question, options = {}) {
   // naturals are essential after an altered pitch on the same staff position.
   const accidentalState = new Map();
   const notes = q.notes.map((item, index) => {
+    const keys = noteKeys(item);
     const note = new StaveNote({
       clef,
-      keys: item.pitches.map(pitchKey),
+      keys,
       duration: item.duration || 'q',
       autoStem: true,
     });
-    item.pitches.forEach((midi, keyIndex) => {
-      const pitch = PITCHES[((midi % 12) + 12) % 12];
+    keys.forEach((key, keyIndex) => {
+      const [pitch, octave] = key.split('/');
       const accidental = pitch.slice(1) || 'n';
-      const position = `${pitch[0]}/${Math.floor(midi / 12) - 1}`;
+      const position = `${pitch[0]}/${octave}`;
       const prior = accidentalState.get(position) || 'n';
       if (accidental !== prior) note.addModifier(new Accidental(accidental), keyIndex);
       accidentalState.set(position, accidental);

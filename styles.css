@@ -35,7 +35,7 @@
   grid-template-rows: minmax(0, 1fr);
 }
 .score-display.with-concert {
-  grid-template-columns: minmax(0, 1fr) clamp(150px, 20vw, 248px);
+  grid-template-columns: minmax(0, 1fr) clamp(185px, 25vw, 335px);
   align-items: end;
 }
 .score-display > .score { height: 100%; }
@@ -44,34 +44,67 @@
   border: 1px solid var(--line);
   border-radius: 12px;
   margin: 4px 16px 6px 0;
-  padding: 8px;
+  padding: 10px;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 2px;
-  height: min(calc(100% - 10px), 200px);
+  height: min(calc(100% - 10px), 260px);
   min-height: 0;
 }
-.concert-caption { text-align: center; color: var(--muted); font-size: .75rem; line-height: 1.2; }
-.concert-caption strong { display: block; color: var(--ink); font-size: 1rem; }
+.concert-caption { text-align: center; color: var(--muted); font-size: .9rem; line-height: 1.2; }
+.concert-caption strong { display: block; color: var(--ink); font-size: 1.25rem; }
 #concert-score { min-height: 0; min-width: 0; }
-#play-concert { padding: 4px 7px; justify-self: center; font-size: .8rem; min-height: 30px; }
+#play-concert { padding: 4px 10px; justify-self: center; font-size: .88rem; min-height: 36px; }
 #play-concert.audio-unavailable { border-color: var(--red); }
 .concert-mismatch { border-color: var(--red); }
 .concert-mismatch .concert-caption strong { color: var(--red); }
+.concert-corrected { border-color: var(--teal); }
+.concert-corrected .concert-caption strong { color: var(--teal); }
+
+.pitch-view-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 9px;
+  padding: 6px 24px 0;
+}
+.pitch-view-group {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--bg);
+  padding: 2px;
+}
+.pitch-view-group button {
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink);
+  font-size: .82rem;
+  padding: 4px 10px;
+  min-height: 26px;
+}
+.pitch-view-group button[aria-pressed="true"] { background: var(--teal); color: white; }
+.pitch-view-group button:disabled { color: var(--muted); opacity: .75; }
+.pitch-view-bar .clef-badge { margin: 0; }
+.pitch-view-hint { font-size: .75rem; color: var(--muted); }
 @media (max-width: 570px) {
+  .pitch-view-bar { padding-inline: 14px; }
   .score-display.with-concert {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) min(47%, 134px);
+    grid-template-rows: minmax(0, 1fr) min(51%, 180px);
   }
-  .concert-pitch { justify-self: end; width: 146px; height: calc(100% - 10px); margin-right: 12px; }
+  .concert-pitch { justify-self: end; width: min(60%, 224px); height: calc(100% - 10px); margin-right: 12px; }
 }
 @media (max-height: 550px) {
+  .pitch-view-bar { padding-top: 3px; }
+  .pitch-view-group button { padding-block: 2px; min-height: 23px; }
   .score-display.with-concert {
-    grid-template-columns: minmax(0, 1fr) minmax(122px, 28%);
+    grid-template-columns: minmax(0, 1fr) minmax(134px, 30%);
     grid-template-rows: minmax(0, 1fr);
   }
   .concert-pitch { width: auto; justify-self: stretch; padding: 3px; }
-  .concert-caption strong { display: inline; margin-inline-start: .2em; font-size: .8rem; }
+  .concert-caption { font-size: .76rem; }
+  .concert-caption strong { display: inline; margin-inline-start: .2em; font-size: .88rem; }
+  #play-concert { min-height: 27px; font-size: .78rem; padding-block: 2px; }
 }
-.concert-corrected { border-color: var(--teal); }
-.concert-corrected .concert-caption strong { color: var(--teal); }

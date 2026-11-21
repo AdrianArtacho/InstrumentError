@@ -7,7 +7,7 @@
   <meta name="description" content="Train your orchestration eye: spot range and notation errors in generated musical examples.">
   <title>InstrumentError · Instrumentation training</title>
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=1.3.0">
+  <link rel="stylesheet" href="./styles.css?v=1.4.0">
 </head>
 <body class="training-app">
   <a class="skip-link" href="#question-heading" data-i18n="skip">Zur Aufgabe</a>
@@ -24,7 +24,7 @@
         </section>
       </div>
       <div class="instrument-heading">
-        <div class="instrument-title"><p id="instrument-family" class="instrument-family"></p><h1 id="question-heading" tabindex="-1">…</h1><span class="clef-badge" id="clef-label"></span></div>
+        <div class="instrument-title"><p id="instrument-family" class="instrument-family"></p><h1 id="question-heading" tabindex="-1">…</h1></div>
         <nav class="training-tools" aria-label="Training">
         <button id="fullscreen-start" class="secondary-button" data-i18n="startFullscreen" hidden>Vollbild starten</button>
           <button class="icon-button" id="settings-button" aria-label="Einstellungen" title="Einstellungen">⚙</button>
@@ -32,6 +32,14 @@
           <button class="icon-button" id="fullscreen-button" aria-label="Vollbild" title="Vollbild">⛶</button>
           <button class="language-button" id="language-button" aria-label="Switch to English">EN</button>
         </nav>
+      </div>
+      <div class="pitch-view-bar">
+        <div id="pitch-view-group" class="pitch-view-group" role="group" aria-label="Tonhöhenansicht">
+          <button id="view-written" type="button" aria-pressed="true" data-i18n="viewWritten">Notiert</button>
+          <button id="view-sounding" type="button" aria-pressed="false" data-i18n="viewSounding">Klingend</button>
+        </div>
+        <span class="clef-badge" id="clef-label"></span>
+        <span id="pitch-view-hint" class="pitch-view-hint" data-i18n="viewAfterResolve" hidden>Klingend nach dem Auflösen</span>
       </div>
       <div class="score-display">
         <div id="score" class="score" aria-busy="true"><p class="loading-message" data-i18n="loading">Noten werden gesetzt …</p></div>
@@ -94,6 +102,6 @@
 <dialog id="new-session-dialog" class="app-dialog small-dialog"><div class="dialog-heading"><h2 data-i18n="newSessionQuestion">Neue Sitzung beginnen?</h2><button class="dialog-close icon-button" aria-label="Schließen">×</button></div><p data-i18n="newSessionHint">Die aktuelle Sitzung bleibt im Gesamtfortschritt erhalten. Punkte und Serie dieser Sitzung starten bei null.</p><div class="dialog-actions"><button class="secondary-button dialog-close" data-i18n="cancel">Abbrechen</button><button id="confirm-new-session" class="primary-button" data-i18n="startSession">Neue Sitzung starten</button></div></dialog>
   <noscript><p class="noscript">Please enable JavaScript to use InstrumentError.</p></noscript>
   <script src="./vendor/vexflow.js"></script>
-  <script type="module" src="./src/app.js?v=1.3.0"></script>
+  <script type="module" src="./src/app.js?v=1.4.0"></script>
 </body>
 </html>

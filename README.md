@@ -6,6 +6,7 @@ A browser quiz for learning instrument ranges and spotting errors in conventiona
 
 - 23 instrument models: strings, orchestral woodwinds, brass, and four mallet-percussion models.
 - Five independently selectable rules: written range, transposition, a chord for one ordinary wind player, an attack accent on a tied continuation, and conflicting ordinary arco/pizzicato instructions.
+- Use **Written / Sounding** above the staff to switch between the instrument’s written notation and the concert-pitch view. Transposition exercises keep the written view until Resolve to avoid revealing the answer.
 - In transposition exercises, compare the written note with the proposed concert pitch. **Play pitch** sounds the pitch shown; after resolving an error, the correction shows and plays the matching concert pitch. Includes non-transposing instruments.
 - Properly engraved clefs, notes, accidentals, ties, articulations and dynamics. Transposing instruments use **written pitch**.
 - Compact training view: the score, answer buttons and short resolution stay on one screen. Instrument selection and full explanations open in dialogs.

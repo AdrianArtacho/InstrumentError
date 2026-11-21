@@ -1,10 +1,11 @@
+import { notationForPitchView } from './pitch-view.js?v=1.4.0';
 import { playPitch, stopPitch } from './pitch-audio.js?v=1.3.0';
 import { readExerciseLink, makeExerciseLink } from './exercise-link.js?v=1.3.0';
 import { FAMILIES, INSTRUMENTS, getInstrument, noteName } from './instruments.js';
 import { RULES, getRule, generateQuestion, getEligibleInstruments, validateQuestion } from './engine.js?v=1.3.0';
 import { loadState, defaultState, saveState, selectAnswer, resolveAnswer, setQuestion, newSession, aggregateStats } from './session.js?v=1.3.0';
-import { renderScore } from './notation.js?v=1.3.0';
-import { TEXT } from './i18n.js?v=1.3.0';
+import { renderScore } from './notation.js?v=1.4.0';
+import { TEXT } from './i18n.js?v=1.4.0';
 
 const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -31,6 +32,7 @@ if (state.active.current && (!getInstrument(state.active.current.question.instru
 }
 let draft = { instrumentIds: [...state.config.instrumentIds], ruleIds: [...state.config.ruleIds] };
 let showCorrected = false;
+let preferredPitchView = 'written';
 let busy = true;
 let saveFailed = loaded.status === 'unavailable';
 let notice = exercise.invalid ? 'invalidExercise' : loaded.status === 'corrupt' ? 'storageCorrupt' : null;
@@ -164,6 +166,17 @@ function updateConcertPitch(question, phase) {
   $('play-concert').querySelector('[data-i18n]').textContent = t(unavailable ? 'audioUnavailableShort' : 'playConcert');
   return { clef: midi < 60 ? 'bass' : 'treble', notes: [{ pitches: [midi], duration: 'q' }] };
 }
+function updatePitchView(question, phase) {
+  const locked = Number.isInteger(question.soundingPitch) && phase !== 'resolved';
+  const view = locked ? 'written' : preferredPitchView;
+  $('pitch-view-group').setAttribute('aria-label', t('viewLabel'));
+  $('view-written').setAttribute('aria-pressed', String(view === 'written'));
+  $('view-sounding').setAttribute('aria-pressed', String(view === 'sounding'));
+  $('view-sounding').disabled = locked;
+  $('view-sounding').title = locked ? t('viewAfterResolve') : '';
+  $('pitch-view-hint').hidden = !locked;
+  return view;
+}
 async function drawQuestion() {
   const current=state.active.current;if(!current)return;
   const version=++renderVersion;busy=true;
@@ -172,15 +185,19 @@ async function drawQuestion() {
   $('question-number').textContent=`${t('question')} ${String(answered+(phase==='resolved'?0:1)).padStart(2,'0')}`;
   $('instrument-family').textContent=familyName(instrument.family);
   $('question-heading').textContent=name(instrument);
-  $('clef-label').textContent=t(question.clef);
+  const view = updatePitchView(question, phase);
   const correctedNotation = showCorrected && !Number.isInteger(question.soundingPitch);
   $('question-card').classList.toggle('is-corrected',correctedNotation);
-  document.querySelector('.notation-badge').textContent=t(correctedNotation?'notationCorrected':'writtenPitch');
+  const displayQuestion = notationForPitchView(question, instrument, view, correctedNotation);
+  $('clef-label').textContent = t(displayQuestion.clef);
+  document.querySelector('.notation-badge').textContent = t(view === 'sounding'
+    ? (correctedNotation ? 'soundingCorrected' : 'soundingPitch')
+    : (correctedNotation ? 'writtenCorrected' : 'writtenPitch'));
   $('score').setAttribute('aria-busy','true');
   const concert = updateConcertPitch(question,phase);
   updateAnswerControls();
   try {
-    const engraving = renderScore($('score'),question,{reveal:phase==='resolved',corrected:correctedNotation,language:lang(),fit:true});
+    const engraving = renderScore($('score'),displayQuestion,{reveal:phase==='resolved',corrected:correctedNotation,language:lang(),fit:true});
     if (concert) {
       await Promise.all([engraving, renderScore($('concert-score'),concert,{language:lang(),fit:true,miniature:true})]);
     } else {
@@ -283,6 +300,13 @@ function renderProgress() {
     row.append(element('span','',round.correct?'✓':'×'),details,element('span','',round.correct?'+10':'0'));
     list.append(row);
   }
+}
+for (const view of ['written', 'sounding']) {
+  $(`view-${view}`).addEventListener('click', () => {
+    if (busy || $(`view-${view}`).disabled) return;
+    preferredPitchView = view;
+    drawQuestion();
+  });
 }
 $('play-concert').addEventListener('click',async()=>{
   const question = state.active.current?.question;
